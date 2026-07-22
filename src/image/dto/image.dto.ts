@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   ValidateNested,
   IsArray,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -19,6 +20,9 @@ export class PositionDto {
 }
 
 export class ImageDto {
+  @IsIn(['image'])
+  type!: 'image';
+
   @IsString()
   image: string;
 
@@ -37,6 +41,9 @@ export class ImageDto {
 }
 
 export class TextDto {
+  @IsIn(['text'])
+  type!: 'text';
+
   @IsString()
   @IsNotEmpty()
   text: string;
@@ -59,16 +66,20 @@ export class TextDto {
   fontSize?: number;
 }
 
-export class GenerateTagDto {
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ImageDto)
-  images?: ImageDto[];
+export type LayerDto = ImageDto | TextDto;
 
-  @IsOptional()
+export class GenerateTagDto {
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => TextDto)
-  texts?: TextDto[];
+  @Type(() => Object, {
+    keepDiscriminatorProperty: true,
+    discriminator: {
+      property: 'type',
+      subTypes: [
+        { value: ImageDto, name: 'image' },
+        { value: TextDto, name: 'text' },
+      ],
+    },
+  })
+  layers!: LayerDto[];
 }

@@ -1,12 +1,16 @@
-import { Injectable, OnModuleInit, NotFoundException } from '@nestjs/common';
-import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  createCanvas,
+  loadImage,
+  GlobalFonts,
+  SKRSContext2D,
+} from '@napi-rs/canvas';
 import * as path from 'path';
 import * as fs from 'fs';
-import { GenerateTagDto } from './dto/image.dto';
+import { GenerateTagDto, ImageDto, TextDto } from './dto/image.dto';
 
 @Injectable()
 export class ImageService {
-
   private registeredFonts = new Set<string>();
 
   getFont(textFont: string): void {
@@ -45,6 +49,44 @@ export class ImageService {
     return imagePath;
   }
 
+  async drawText(ctx: SKRSContext2D, label: TextDto) {
+    this.getFont(label.textFont);
+
+    const fontSize = label.fontSize || 80;
+    ctx.font = `${fontSize}px "${label.textFont}"`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const textX = label.textPosition.x;
+    const textY = label.textPosition.y;
+
+    // create border
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = Math.max(12, fontSize * 0.15); //this borde is proportional to the size
+    ctx.lineJoin = 'round';
+    ctx.strokeText(label.text, textX, textY);
+
+    //color text
+    ctx.fillStyle = label.textColor || 'black';
+    ctx.fillText(label.text, textX, textY);
+  }
+
+  async drawImage(ctx: SKRSContext2D, label: ImageDto) {
+    const imagePath = this.getImage(label.image);
+
+    const characterImg = await loadImage(imagePath);
+    const imgWidth = label.imageWidth || characterImg.width;
+    const imgHeight = label.imageHeight || characterImg.height;
+
+    ctx.drawImage(
+      characterImg,
+      label.imagePosition.x,
+      label.imagePosition.y,
+      imgWidth,
+      imgHeight,
+    );
+  }
+
   async generateCustomLabel(dto: GenerateTagDto): Promise<Buffer> {
     // create canvas
     const canvasWidth = 600;
@@ -52,41 +94,17 @@ export class ImageService {
     const canvas = createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext('2d');
 
-    // get font and image
-    this.getFont(dto.textFont);
-    const imagePath = this.getImage(dto.image);
+    for (const layer of dto.layers) {
+      switch (layer.type) {
+        case 'image':
+          await this.drawImage(ctx, layer);
+          break;
 
-    //draw the image
-    const characterImg = await loadImage(imagePath);
-    const imgWidth = dto.imageWidth || characterImg.width;
-    const imgHeight = dto.imageHeight || characterImg.height;
-
-    ctx.drawImage(
-      characterImg,
-      dto.imagePosition.x,
-      dto.imagePosition.y,
-      imgWidth,
-      imgHeight,
-    );
-
-    // draw the text
-    const fontSize = dto.fontSize || 80;
-    ctx.font = `${fontSize}px "${dto.textFont}"`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    const textX = dto.textPosition.x;
-    const textY = dto.textPosition.y;
-
-    // create border
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = Math.max(12, fontSize * 0.15); //this borde is proportional to the size
-    ctx.lineJoin = 'round';
-    ctx.strokeText(dto.text, textX, textY);
-
-    //color text
-    ctx.fillStyle = dto.textColor || 'black';
-    ctx.fillText(dto.text, textX, textY);
+        case 'text':
+          this.drawText(ctx, layer);
+          break;
+      }
+    }
 
     // return PNG
     return canvas.toBuffer('image/png');
