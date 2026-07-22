@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsNotEmpty,
   ValidateNested,
+  IsArray,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -17,7 +18,7 @@ export class PositionDto {
   y: number;
 }
 
-export class GenerateTagDto {
+export class ImageDto {
   @IsString()
   image: string;
 
@@ -33,7 +34,9 @@ export class GenerateTagDto {
   @IsOptional()
   @IsNumber()
   imageHeight?: number;
+}
 
+export class TextDto {
   @IsString()
   @IsNotEmpty()
   text: string;
@@ -54,4 +57,18 @@ export class GenerateTagDto {
   @IsOptional()
   @IsNumber()
   fontSize?: number;
+}
+
+export class GenerateTagDto {
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ImageDto)
+  images?: ImageDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => TextDto)
+  texts?: TextDto[];
 }

@@ -27,7 +27,7 @@ export class ImageController {
       return res.send(imageBuffer);
     } catch (error: any) {
       return res.status(error.status || 500).json({
-        message: 'Error al generar la etiqueta personalizada.',
+        message: 'Error to generate the label.',
         error: error.message,
       });
     }
