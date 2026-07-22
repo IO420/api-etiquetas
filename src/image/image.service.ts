@@ -82,11 +82,11 @@ export class ImageService {
     ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = Math.max(12, fontSize * 0.15); //this borde is proportional to the size
     ctx.lineJoin = 'round';
-    ctx.strokeText(dto.text.toUpperCase(), textX, textY);
+    ctx.strokeText(dto.text, textX, textY);
 
     //color text
     ctx.fillStyle = dto.textColor || 'black';
-    ctx.fillText(dto.text.toUpperCase(), textX, textY);
+    ctx.fillText(dto.text, textX, textY);
 
     // return PNG
     return canvas.toBuffer('image/png');
