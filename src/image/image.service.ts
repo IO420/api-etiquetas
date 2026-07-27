@@ -12,6 +12,8 @@ import { drawWave } from './shapes/wave';
 import { drawCircle } from './shapes/circle';
 import { drawRectangle } from './shapes/rectangle';
 
+import PDFDocument from 'pdfkit';
+
 @Injectable()
 export class ImageService {
   private registeredFonts = new Set<string>();
@@ -67,7 +69,9 @@ export class ImageService {
     const rotation = ((label.rotation ?? 0) * Math.PI) / 180;
     ctx.rotate(rotation);
 
-    ctx.font = `${fontSize}px "${fontFamily}"`;
+    const fontWeight = label.fontWeight ?? 'normal';
+
+    ctx.font = `${fontWeight} ${fontSize}px "${fontFamily}"`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -173,6 +177,35 @@ export class ImageService {
 
     // return PNG
     return canvas.toBuffer('image/png');
+  }
+
+  async generateCustomLabelPdf(dto: GenerateTagDto): Promise<Buffer> {
+    const imageBuffer = await this.generateCustomLabel(dto);
+
+    const widthInPoints = 20 * 28.3465; // ~566.93 puntos
+    const heightInPoints = 26.5 * 28.3465; // ~751.18 puntos
+
+    return new Promise((resolve, reject) => {
+      const chunks: Buffer[] = [];
+
+      //create the document without margin
+      const doc = new PDFDocument({
+        size: [widthInPoints, heightInPoints],
+        margins: { top: 0, bottom: 0, left: 0, right: 0 },
+      });
+
+      doc.on('data', (chunk) => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', (err) => reject(err));
+
+      // insert the png
+      doc.image(imageBuffer, 0, 0, {
+        width: widthInPoints,
+        height: heightInPoints,
+      });
+
+      doc.end();
+    });
   }
 }
 //IO

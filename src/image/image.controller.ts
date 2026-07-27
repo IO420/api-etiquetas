@@ -32,4 +32,25 @@ export class ImageController {
       });
     }
   }
+
+  @Post('label/pdf')
+  @HttpCode(HttpStatus.OK)
+  async generateLabelPdf(@Body() dto: GenerateTagDto, @Res() res: Response) {
+    try {
+      const pdfBuffer = await this.imageService.generateCustomLabelPdf(dto);
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        'attachment; filename="portada-cuaderno.pdf"',
+      );
+
+      return res.send(pdfBuffer);
+    } catch (error: any) {
+      return res.status(error.status || 500).json({
+        message: 'Error to generate the PDF layout.',
+        error: error.message,
+      });
+    }
+  }
 }

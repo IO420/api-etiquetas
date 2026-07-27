@@ -76,6 +76,10 @@ export class TextDto {
   @IsOptional()
   @IsNumber()
   rotation?: number;
+
+  @IsOptional()
+  @IsIn(['normal', 'bold'])
+  fontWeight?: 'normal' | 'bold';
 }
 
 export class ShapeBaseDto {
