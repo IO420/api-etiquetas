@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import { GenerateTagDto, ImageDto, TextDto } from './dto/image.dto';
 import { drawWave } from './shapes/wave';
 import { drawCircle } from './shapes/circle';
+import { drawRectangle } from './shapes/rectangle';
 
 @Injectable()
 export class ImageService {
@@ -53,43 +54,88 @@ export class ImageService {
   }
 
   async drawText(ctx: SKRSContext2D, label: TextDto) {
-    this.getFont(label.textFont);
+    const fontFamily = label.textFont || 'Open Sans';
+
+    this.getFont(fontFamily);
 
     const fontSize = label.fontSize || 80;
 
-    ctx.font = `${fontSize}px "${label.textFont}"`;
+    ctx.save();
+    ctx.translate(label.position.x, label.position.y);
+
+    // degrees to radians
+    const rotation = ((label.rotation ?? 0) * Math.PI) / 180;
+    ctx.rotate(rotation);
+
+    ctx.font = `${fontSize}px "${fontFamily}"`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    const textX = label.position.x;
-    const textY = label.position.y;
-
     // create border
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = Math.max(12, fontSize * 0.15); //this borde is proportional to the size
-    ctx.lineJoin = 'round';
+    if (label.strokeWidth) {
+      ctx.strokeStyle = label.strokeColor || '#FFFFFF';
+      ctx.lineWidth = Math.max(12, fontSize * 0.15);
+      ctx.lineJoin = 'round';
 
-    ctx.strokeText(label.text, textX, textY);
+      ctx.strokeText(label.text, 0, 0);
+    }
 
     //color text
     ctx.fillStyle = label.color || 'black';
-    ctx.fillText(label.text, textX, textY);
+    ctx.fillText(label.text, 0, 0);
+
+    ctx.restore();
   }
 
   async drawImage(ctx: SKRSContext2D, label: ImageDto) {
     const imagePath = this.getImage(label.image);
 
-    const characterImg = await loadImage(imagePath);
+    const img = await loadImage(imagePath);
 
-    const imgWidth = label.width || characterImg.width;
-    const imgHeight = label.height || characterImg.height;
+    const originalWidth = img.width;
+    const originalHeight = img.height;
+
+    let width = label.width;
+    let height = label.height;
+
+    // calculate height
+    if (width && !height) {
+      height = (width * originalHeight) / originalWidth;
+    }
+
+    // calculate width
+    if (height && !width) {
+      width = (height * originalWidth) / originalHeight;
+    }
+
+    // use original size
+    if (!width && !height) {
+      width = originalWidth;
+      height = originalHeight;
+    }
+
+    // max height or width
+    if (width && height) {
+      const aspectRatio = originalWidth / originalHeight;
+
+      const targetRatio = width / height;
+
+      if (targetRatio > aspectRatio) {
+        width = height * aspectRatio;
+      } else {
+        height = width / aspectRatio;
+      }
+    }
+
+    const finalWidth = width ?? originalWidth;
+    const finalHeight = height ?? originalHeight;
 
     ctx.drawImage(
-      characterImg,
+      img,
       label.position.x,
       label.position.y,
-      imgWidth,
-      imgHeight,
+      finalWidth,
+      finalHeight,
     );
   }
 
@@ -117,6 +163,10 @@ export class ImageService {
 
         case 'circle':
           drawCircle(ctx, layer);
+          break;
+
+        case 'rectangle':
+          drawRectangle(ctx, layer);
           break;
       }
     }

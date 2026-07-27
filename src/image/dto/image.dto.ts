@@ -49,8 +49,8 @@ export class TextDto {
   text: string;
 
   @IsString()
-  @IsNotEmpty()
-  textFont: string;
+  @IsOptional()
+  textFont?: string;
 
   @ValidateNested()
   @Type(() => PositionDto)
@@ -64,6 +64,18 @@ export class TextDto {
   @IsOptional()
   @IsNumber()
   fontSize?: number;
+
+  @IsOptional()
+  @IsNumber()
+  strokeWidth?: number;
+
+  @IsOptional()
+  @IsString()
+  strokeColor?: string;
+
+  @IsOptional()
+  @IsNumber()
+  rotation?: number;
 }
 
 export class ShapeBaseDto {
@@ -111,7 +123,23 @@ export class CircleShapeDto extends ShapeBaseDto {
   radius: number;
 }
 
-export type LayerDto = ImageDto | TextDto | WaveShapeDto | CircleShapeDto;
+export class RectangleShapeDto extends ShapeBaseDto {
+  @IsIn(['rectangle'])
+  type: 'rectangle';
+
+  @IsNumber()
+  width: number;
+
+  @IsNumber()
+  height: number;
+
+  @IsOptional()
+  @IsNumber()
+  borderRadius?: number;
+}
+
+export type LayerDto =
+  ImageDto | TextDto | WaveShapeDto | CircleShapeDto | RectangleShapeDto;
 
 export class GenerateTagDto {
   @IsArray()
@@ -125,6 +153,7 @@ export class GenerateTagDto {
         { value: TextDto, name: 'text' },
         { value: WaveShapeDto, name: 'wave' },
         { value: CircleShapeDto, name: 'circle' },
+        { value: RectangleShapeDto, name: 'rectangle' },
       ],
     },
   })
