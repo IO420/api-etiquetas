@@ -8,6 +8,8 @@ import {
 import * as path from 'path';
 import * as fs from 'fs';
 import { GenerateTagDto, ImageDto, TextDto } from './dto/image.dto';
+import { drawWave } from './shapes/wave';
+import { drawCircle } from './shapes/circle';
 
 @Injectable()
 export class ImageService {
@@ -42,6 +44,7 @@ export class ImageService {
       '../../assets/label/images',
       image,
     );
+
     if (!fs.existsSync(imagePath)) {
       throw new NotFoundException(`'${image}' not exist.`);
     }
@@ -53,21 +56,23 @@ export class ImageService {
     this.getFont(label.textFont);
 
     const fontSize = label.fontSize || 80;
+
     ctx.font = `${fontSize}px "${label.textFont}"`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    const textX = label.textPosition.x;
-    const textY = label.textPosition.y;
+    const textX = label.position.x;
+    const textY = label.position.y;
 
     // create border
     ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = Math.max(12, fontSize * 0.15); //this borde is proportional to the size
     ctx.lineJoin = 'round';
+
     ctx.strokeText(label.text, textX, textY);
 
     //color text
-    ctx.fillStyle = label.textColor || 'black';
+    ctx.fillStyle = label.color || 'black';
     ctx.fillText(label.text, textX, textY);
   }
 
@@ -75,13 +80,14 @@ export class ImageService {
     const imagePath = this.getImage(label.image);
 
     const characterImg = await loadImage(imagePath);
-    const imgWidth = label.imageWidth || characterImg.width;
-    const imgHeight = label.imageHeight || characterImg.height;
+
+    const imgWidth = label.width || characterImg.width;
+    const imgHeight = label.height || characterImg.height;
 
     ctx.drawImage(
       characterImg,
-      label.imagePosition.x,
-      label.imagePosition.y,
+      label.position.x,
+      label.position.y,
       imgWidth,
       imgHeight,
     );
@@ -90,7 +96,8 @@ export class ImageService {
   async generateCustomLabel(dto: GenerateTagDto): Promise<Buffer> {
     // create canvas
     const canvasWidth = 600;
-    const canvasHeight = 500;
+    const canvasHeight = 850;
+
     const canvas = createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext('2d');
 
@@ -101,7 +108,15 @@ export class ImageService {
           break;
 
         case 'text':
-          this.drawText(ctx, layer);
+          await this.drawText(ctx, layer);
+          break;
+
+        case 'wave':
+          drawWave(ctx, layer);
+          break;
+
+        case 'circle':
+          drawCircle(ctx, layer);
           break;
       }
     }
