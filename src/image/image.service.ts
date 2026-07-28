@@ -18,6 +18,20 @@ import PDFDocument from 'pdfkit';
 export class ImageService {
   private registeredFonts = new Set<string>();
 
+  private readonly assetsPath: string;
+
+  constructor() {
+    const assetsPath = process.env.ASSETS_PATH;
+
+    if (!assetsPath) {
+      throw new Error(
+        "Missing environment variable 'ASSETS_PATH'. Add the following to your .env:\n\nASSETS_PATH=C:\\Etiquetas",
+      );
+    }
+
+    this.assetsPath = assetsPath;
+  }
+
   getFont(textFont: string): void {
     if (!textFont) return;
 
@@ -26,11 +40,7 @@ export class ImageService {
       return;
     }
 
-    const fontPath = path.resolve(
-      __dirname,
-      '../../assets/label/fonts',
-      textFont,
-    );
+    const fontPath = path.join(this.assetsPath, 'fonts', textFont);
 
     //save the font
     if (fs.existsSync(fontPath)) {
@@ -42,11 +52,7 @@ export class ImageService {
   getImage(image: string): string {
     if (!image) throw new NotFoundException(`null detected.`);
 
-    const imagePath = path.resolve(
-      __dirname,
-      '../../assets/label/images',
-      image,
-    );
+    const imagePath = path.join(this.assetsPath, 'images', image);
 
     if (!fs.existsSync(imagePath)) {
       throw new NotFoundException(`'${image}' not exist.`);
