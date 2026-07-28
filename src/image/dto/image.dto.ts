@@ -146,6 +146,14 @@ export type LayerDto =
   ImageDto | TextDto | WaveShapeDto | CircleShapeDto | RectangleShapeDto;
 
 export class GenerateTagDto {
+  @IsNotEmpty()
+  @IsNumber()
+  canvasWidth: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  canvasHeight: number;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => Object, {

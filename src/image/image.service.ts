@@ -145,8 +145,8 @@ export class ImageService {
 
   async generateCustomLabel(dto: GenerateTagDto): Promise<Buffer> {
     // create canvas
-    const canvasWidth = 600;
-    const canvasHeight = 850;
+    const canvasWidth = dto.canvasWidth;
+    const canvasHeight = dto.canvasHeight;
 
     const canvas = createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext('2d');
