@@ -18,7 +18,6 @@ export class ImageController {
   @HttpCode(HttpStatus.OK)
   async generateLabel(@Body() dto: GenerateTagDto, @Res() res: Response) {
     try {
-
       const imageBuffer = await this.imageService.generateCustomLabel(dto);
 
       res.setHeader('Content-Type', 'image/png');
