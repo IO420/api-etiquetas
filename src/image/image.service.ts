@@ -1,24 +1,22 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import {
-  createCanvas,
-  loadImage,
-  GlobalFonts,
-  SKRSContext2D,
-} from '@napi-rs/canvas';
+import { Injectable } from '@nestjs/common';
+import { createCanvas } from '@napi-rs/canvas';
+import { GenerateTagDto } from './dto/image.dto';
+import { drawWave } from './draw/wave';
+import { drawCircle } from './draw/circle';
+import { drawRectangle } from './draw/rectangle';
 import * as path from 'path';
 import * as fs from 'fs';
-import { GenerateTagDto, ImageDto, TextDto } from './dto/image.dto';
-import { drawWave } from './shapes/wave';
-import { drawCircle } from './shapes/circle';
-import { drawRectangle } from './shapes/rectangle';
 
 import PDFDocument from 'pdfkit';
+import { drawText } from './draw/text';
+import { drawImage } from './draw/image';
 
 @Injectable()
 export class ImageService {
   private registeredFonts = new Set<string>();
 
   private readonly assetsPath: string;
+  private readonly uploadsPath: string;
 
   constructor() {
     const assetsPath = process.env.ASSETS_PATH;
@@ -30,123 +28,12 @@ export class ImageService {
     }
 
     this.assetsPath = assetsPath;
-  }
 
-  getFont(textFont: string): void {
-    if (!textFont) return;
-
-    //if the font ist already in the set, dont save
-    if (this.registeredFonts.has(textFont)) {
-      return;
+    // file to save image
+    this.uploadsPath = path.join(process.cwd(), 'uploads', 'previews');
+    if (!fs.existsSync(this.uploadsPath)) {
+      fs.mkdirSync(this.uploadsPath, { recursive: true });
     }
-
-    const fontPath = path.join(this.assetsPath, 'fonts', textFont);
-
-    //save the font
-    if (fs.existsSync(fontPath)) {
-      GlobalFonts.registerFromPath(fontPath, textFont);
-      this.registeredFonts.add(textFont);
-    }
-  }
-
-  getImage(image: string): string {
-    if (!image) throw new NotFoundException(`null detected.`);
-
-    const imagePath = path.join(this.assetsPath, 'images', image);
-
-    if (!fs.existsSync(imagePath)) {
-      throw new NotFoundException(`'${image}' not exist.`);
-    }
-
-    return imagePath;
-  }
-
-  async drawText(ctx: SKRSContext2D, label: TextDto) {
-    const fontFamily = label.textFont || 'Open Sans';
-
-    this.getFont(fontFamily);
-
-    const fontSize = label.fontSize || 80;
-
-    ctx.save();
-    ctx.translate(label.position.x, label.position.y);
-
-    // degrees to radians
-    const rotation = ((label.rotation ?? 0) * Math.PI) / 180;
-    ctx.rotate(rotation);
-
-    const fontWeight = label.fontWeight ?? 'normal';
-
-    ctx.font = `${fontWeight} ${fontSize}px "${fontFamily}"`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    // create border
-    if (label.strokeWidth) {
-      ctx.strokeStyle = label.strokeColor || '#FFFFFF';
-      ctx.lineWidth = Math.max(12, fontSize * 0.15);
-      ctx.lineJoin = 'round';
-
-      ctx.strokeText(label.text, 0, 0);
-    }
-
-    //color text
-    ctx.fillStyle = label.color || 'black';
-    ctx.fillText(label.text, 0, 0);
-
-    ctx.restore();
-  }
-
-  async drawImage(ctx: SKRSContext2D, label: ImageDto) {
-    const imagePath = this.getImage(label.image);
-
-    const img = await loadImage(imagePath);
-
-    const originalWidth = img.width;
-    const originalHeight = img.height;
-
-    let width = label.width;
-    let height = label.height;
-
-    // calculate height
-    if (width && !height) {
-      height = (width * originalHeight) / originalWidth;
-    }
-
-    // calculate width
-    if (height && !width) {
-      width = (height * originalWidth) / originalHeight;
-    }
-
-    // use original size
-    if (!width && !height) {
-      width = originalWidth;
-      height = originalHeight;
-    }
-
-    // max height or width
-    if (width && height) {
-      const aspectRatio = originalWidth / originalHeight;
-
-      const targetRatio = width / height;
-
-      if (targetRatio > aspectRatio) {
-        width = height * aspectRatio;
-      } else {
-        height = width / aspectRatio;
-      }
-    }
-
-    const finalWidth = width ?? originalWidth;
-    const finalHeight = height ?? originalHeight;
-
-    ctx.drawImage(
-      img,
-      label.position.x,
-      label.position.y,
-      finalWidth,
-      finalHeight,
-    );
   }
 
   async generateCustomLabel(dto: GenerateTagDto): Promise<Buffer> {
@@ -160,11 +47,11 @@ export class ImageService {
     for (const layer of dto.layers) {
       switch (layer.type) {
         case 'image':
-          await this.drawImage(ctx, layer);
+          await drawImage(ctx, layer, this.assetsPath);
           break;
 
         case 'text':
-          await this.drawText(ctx, layer);
+          drawText(ctx, layer, this.assetsPath, this.registeredFonts);
           break;
 
         case 'wave':
@@ -181,8 +68,32 @@ export class ImageService {
       }
     }
 
-    // return PNG
-    return canvas.toBuffer('image/png');
+    const imageBuffer = canvas.toBuffer('image/png');
+
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+    return imageBuffer;
+  }
+
+  async generateLabelPreview(
+    dto: GenerateTagDto,
+    templateId?: string,
+  ): Promise<{ url: string }> {
+    const buffer = await this.generateCustomLabel(dto);
+
+    // Nombre estático si se especifica un ID o aleatorio por timestamp
+    const filename = templateId
+      ? `${templateId}.png`
+      : `label-${Date.now()}.png`;
+    const filePath = path.join(this.uploadsPath, filename);
+
+    // Escribir en el disco estático
+    await fs.promises.writeFile(filePath, buffer);
+
+    // Devolver la URL servible
+    return {
+      url: `http://localhost:3001/uploads/previews/${filename}`,
+    };
   }
 
   async generateCustomLabelPdf(dto: GenerateTagDto): Promise<Buffer> {
@@ -204,11 +115,7 @@ export class ImageService {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', (err) => reject(err));
 
-      // insert the png
-      doc.image(imageBuffer, 0, 0, {
-        width: widthInPoints,
-        height: heightInPoints,
-      });
+      doc.image(imageBuffer, 0, 0);
 
       doc.end();
     });

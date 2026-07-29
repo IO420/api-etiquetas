@@ -52,4 +52,10 @@ export class ImageController {
       });
     }
   }
+
+  @Post('label/preview')
+  @HttpCode(HttpStatus.OK)
+  async generateLabelPreview(@Body() dto: GenerateTagDto) {
+    return await this.imageService.generateLabelPreview(dto);
+  }
 }
