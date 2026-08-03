@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ImageService } from './image.service';
-import { GenerateTagDto } from './dto/image.dto';
+import { GeneratePreviewDto, GenerateTagDto } from './dto/image.dto';
 
 @Controller('image')
 export class ImageController {
@@ -55,7 +55,7 @@ export class ImageController {
 
   @Post('label/preview')
   @HttpCode(HttpStatus.OK)
-  async generateLabelPreview(@Body() dto: GenerateTagDto) {
+  async generateLabelPreview(@Body() dto: GeneratePreviewDto) {
     return await this.imageService.generateLabelPreview(dto);
   }
 }

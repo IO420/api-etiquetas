@@ -171,3 +171,9 @@ export class GenerateTagDto {
   })
   layers!: LayerDto[];
 }
+
+export class GeneratePreviewDto extends GenerateTagDto {
+  @IsNotEmpty()
+  @IsNumber()
+  templateId: number;
+}

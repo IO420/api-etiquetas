@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { createCanvas } from '@napi-rs/canvas';
-import { GenerateTagDto } from './dto/image.dto';
+import { GeneratePreviewDto, GenerateTagDto } from './dto/image.dto';
 import { drawWave } from './draw/wave';
 import { drawCircle } from './draw/circle';
 import { drawRectangle } from './draw/rectangle';
@@ -76,21 +76,15 @@ export class ImageService {
   }
 
   async generateLabelPreview(
-    dto: GenerateTagDto,
-    templateId?: string,
+    dto: GeneratePreviewDto,
   ): Promise<{ url: string }> {
     const buffer = await this.generateCustomLabel(dto);
 
-    // Nombre estático si se especifica un ID o aleatorio por timestamp
-    const filename = templateId
-      ? `${templateId}.png`
-      : `label-${Date.now()}.png`;
+    const filename = `${dto.templateId}_${dto.canvasWidth}_${dto.canvasHeight}.png`;
     const filePath = path.join(this.uploadsPath, filename);
 
-    // Escribir en el disco estático
     await fs.promises.writeFile(filePath, buffer);
 
-    // Devolver la URL servible
     return {
       url: `http://localhost:3001/uploads/previews/${filename}`,
     };
