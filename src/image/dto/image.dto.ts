@@ -45,7 +45,6 @@ export class TextDto {
   type: 'text';
 
   @IsString()
-  @IsNotEmpty()
   text: string;
 
   @IsString()

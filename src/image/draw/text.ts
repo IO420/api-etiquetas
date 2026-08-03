@@ -30,6 +30,11 @@ export function drawText(
   assetsPath: string,
   registeredFonts: Set<string>,
 ) {
+  
+  if (!label.text || label.text.trim() === '') {
+    return;
+  }
+
   const fontFamily = label.textFont || 'Open Sans';
 
   getFont(fontFamily, assetsPath, registeredFonts);
