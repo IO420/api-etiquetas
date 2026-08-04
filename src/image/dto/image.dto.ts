@@ -45,11 +45,16 @@ export class TextDto {
   type: 'text';
 
   @IsString()
+  @IsOptional()
   text: string;
 
   @IsString()
   @IsOptional()
   textFont?: string;
+
+  @IsOptional()
+  @IsIn(['left', 'center', 'right'])
+  textAlign?: 'left' | 'center' | 'right';
 
   @ValidateNested()
   @Type(() => PositionDto)

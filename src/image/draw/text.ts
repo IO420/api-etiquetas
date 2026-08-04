@@ -30,7 +30,7 @@ export function drawText(
   assetsPath: string,
   registeredFonts: Set<string>,
 ) {
-  
+
   if (!label.text || label.text.trim() === '') {
     return;
   }
@@ -51,7 +51,7 @@ export function drawText(
   const fontWeight = label.fontWeight ?? 'normal';
 
   ctx.font = `${fontWeight} ${fontSize}px "${fontFamily}"`;
-  ctx.textAlign = 'center';
+  ctx.textAlign = label.textAlign || 'center';
   ctx.textBaseline = 'middle';
 
   // create border
