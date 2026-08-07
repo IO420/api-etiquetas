@@ -157,6 +157,7 @@ export class ImageService {
       id_image: img.id_image,
       name: img.name,
       url: `${baseUrl}/uploads/original/${img.name}`,
+      url_optimized:`${baseUrl}/uploads/optimized/${img.name}`,
     }));
 
     const totalPages = Math.ceil(totalItems / currentLimit);
