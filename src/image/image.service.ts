@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { createCanvas } from '@napi-rs/canvas';
 import { GeneratePreviewDto, GenerateTagDto } from './dto/image.dto';
 import { drawWave } from './draw/wave';
@@ -10,6 +10,9 @@ import * as fs from 'fs';
 import PDFDocument from 'pdfkit';
 import { drawText } from './draw/text';
 import { drawImage } from './draw/image';
+import { Repository } from 'typeorm';
+import { Image } from './entities/image.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class ImageService {
@@ -18,7 +21,10 @@ export class ImageService {
   private readonly assetsPath: string;
   private readonly uploadsPath: string;
 
-  constructor() {
+  constructor(
+    @InjectRepository(Image)
+    private readonly imageRepository: Repository<Image>,
+  ) {
     const assetsPath = process.env.ASSETS_PATH;
 
     if (!assetsPath) {
@@ -34,6 +40,25 @@ export class ImageService {
     if (!fs.existsSync(this.uploadsPath)) {
       fs.mkdirSync(this.uploadsPath, { recursive: true });
     }
+  }
+
+  async getImage() {
+    return await this.imageRepository.find();
+  }
+
+  async findOne(name: string) {
+    return await this.imageRepository.findOne({ where: { name } });
+  }
+
+  async createImage(name: string) {
+    const image = await this.findOne(name);
+    if (image) {
+      throw new ConflictException('the image already exist');
+    }
+
+    const create = this.imageRepository.create({ name });
+
+    return await this.imageRepository.save(create);
   }
 
   async generateCustomLabel(dto: GenerateTagDto): Promise<Buffer> {
@@ -80,7 +105,7 @@ export class ImageService {
   ): Promise<{ url: string }> {
     const buffer = await this.generateCustomLabel(dto);
 
-    const filename = `${dto.templateId}_${dto.canvasWidth}_${dto.canvasHeight}.png`;
+    const filename = `${dto.templateId}_${dto.canvasWidth}_${dto.canvasHeight}.webp`;
     const filePath = path.join(this.uploadsPath, filename);
 
     await fs.promises.writeFile(filePath, buffer);
@@ -113,6 +138,41 @@ export class ImageService {
 
       doc.end();
     });
+  }
+
+  async getAllPreviewImage(page: number = 1, limit: number = 10) {
+    const currentPage = Math.max(1, Number(page) || 1);
+    const currentLimit = Math.max(1, Number(limit) || 10);
+    const skip = (currentPage - 1) * currentLimit;
+
+    const [images, totalItems] = await this.imageRepository.findAndCount({
+      order: { id_image: 'DESC' },
+      take: currentLimit,
+      skip: skip,
+    });
+
+    const baseUrl = 'http://localhost:3001';
+
+    const formattedImages = images.map((img) => ({
+      id_image: img.id_image,
+      name: img.name,
+      url: `${baseUrl}/uploads/original/${img.name}`,
+    }));
+
+    const totalPages = Math.ceil(totalItems / currentLimit);
+
+    return {
+      data: formattedImages,
+      meta: {
+        totalItems,
+        itemCount: formattedImages.length,
+        itemsPerPage: currentLimit,
+        totalPages,
+        currentPage,
+        hasNextPage: currentPage < totalPages,
+        hasPreviousPage: currentPage > 1,
+      },
+    };
   }
 }
 //IO
