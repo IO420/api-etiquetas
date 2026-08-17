@@ -97,7 +97,7 @@ export class ImageService {
     for (const layer of dto.layers) {
       switch (layer.type) {
         case 'image':
-          await drawImage(ctx, layer, this.assetsPath);
+          await drawImage(ctx, layer, this.originalPath);
           break;
 
         case 'text':
@@ -125,12 +125,19 @@ export class ImageService {
     return imageBuffer;
   }
 
-  async generateLabelPreview(
-    dto: GeneratePreviewDto,
-  ): Promise<{ url: string }> {
-    const buffer = await this.generateCustomLabel(dto);
+  async generateLabelPreview(templateData: {
+    templateId: number;
+    canvasWidth: number;
+    canvasHeight: number;
+    layers: any[];
+  }): Promise<{ url: string }> {
+    const buffer = await this.generateCustomLabel({
+      canvasWidth: templateData.canvasWidth,
+      canvasHeight: templateData.canvasHeight,
+      layers: templateData.layers,
+    });
 
-    const filename = `${dto.templateId}_${dto.canvasWidth}_${dto.canvasHeight}.webp`;
+    const filename = `${templateData.templateId}_${templateData.canvasWidth}_${templateData.canvasHeight}.webp`;
     const filePath = path.join(this.uploadsPath, filename);
 
     await fs.promises.writeFile(filePath, buffer);

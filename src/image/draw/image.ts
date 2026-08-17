@@ -7,7 +7,7 @@ import * as fs from 'fs';
 function getImage(image: string, assetsPath: string): string {
   if (!image) throw new NotFoundException(`null detected.`);
 
-  const imagePath = path.join(assetsPath, 'images', image);
+  const imagePath = path.join(assetsPath, '', image);
 
   if (!fs.existsSync(imagePath)) {
     throw new NotFoundException(`'${image}' not exist.`);

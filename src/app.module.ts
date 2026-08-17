@@ -6,6 +6,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { LayersModule } from './layers/layers.module';
+import { TemplatesModule } from './templates/templates.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -43,6 +46,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       },
     }),
     ImageModule,
+    LayersModule,
+    TemplatesModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
