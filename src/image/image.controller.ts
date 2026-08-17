@@ -7,10 +7,16 @@ import {
   HttpStatus,
   Get,
   Query,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+  Delete,
+  Param,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { ImageService } from './image.service';
 import { GeneratePreviewDto, GenerateTagDto } from './dto/image.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('image')
 export class ImageController {
@@ -22,8 +28,8 @@ export class ImageController {
   }
 
   @Post()
-  createImage(@Body() body: { name: string }) {
-    return this.imageService.createImage(body.name);
+  createImageName(@Body() body: { name: string }) {
+    return this.imageService.createImageName(body.name);
   }
 
   @Post('label')
@@ -77,5 +83,20 @@ export class ImageController {
     @Query('limit') limit: number = 10,
   ) {
     return await this.imageService.getAllPreviewImage(page, limit);
+  }
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('El archivo de imagen es requerido');
+    }
+    return await this.imageService.processAndSaveImage(file);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async deleteImage(@Param('id') id: number) {
+    return await this.imageService.deleteImage(id);
   }
 }

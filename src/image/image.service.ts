@@ -1,4 +1,9 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { createCanvas } from '@napi-rs/canvas';
 import { GeneratePreviewDto, GenerateTagDto } from './dto/image.dto';
 import { drawWave } from './draw/wave';
@@ -13,6 +18,7 @@ import { drawImage } from './draw/image';
 import { Repository } from 'typeorm';
 import { Image } from './entities/image.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import sharp from 'sharp';
 
 @Injectable()
 export class ImageService {
@@ -20,6 +26,9 @@ export class ImageService {
 
   private readonly assetsPath: string;
   private readonly uploadsPath: string;
+
+  private readonly originalPath: string;
+  private readonly optimizedPath: string;
 
   constructor(
     @InjectRepository(Image)
@@ -40,20 +49,36 @@ export class ImageService {
     if (!fs.existsSync(this.uploadsPath)) {
       fs.mkdirSync(this.uploadsPath, { recursive: true });
     }
+
+    this.originalPath = path.join(process.cwd(), 'uploads', 'original');
+    if (!fs.existsSync(this.originalPath)) {
+      fs.mkdirSync(this.originalPath, { recursive: true });
+    }
+
+    this.optimizedPath = path.join(process.cwd(), 'uploads', 'optimized');
+    if (!fs.existsSync(this.optimizedPath)) {
+      fs.mkdirSync(this.optimizedPath, { recursive: true });
+    }
   }
 
   async getImage() {
     return await this.imageRepository.find();
   }
 
-  async findOne(name: string) {
+  async findOneByName(name: string) {
     return await this.imageRepository.findOne({ where: { name } });
   }
 
-  async createImage(name: string) {
-    const image = await this.findOne(name);
+  async findOneById(id_image: number) {
+    return await this.imageRepository.findOne({ where: { id_image } });
+  }
+
+  async createImageName(name: string) {
+    const image = await this.findOneByName(name);
     if (image) {
-      throw new ConflictException('the image already exist');
+      throw new ConflictException(
+        `The image name "${name}" already exist. change the name.`,
+      );
     }
 
     const create = this.imageRepository.create({ name });
@@ -157,7 +182,7 @@ export class ImageService {
       id_image: img.id_image,
       name: img.name,
       url: `${baseUrl}/uploads/original/${img.name}`,
-      url_optimized:`${baseUrl}/uploads/optimized/${img.name}`,
+      url_optimized: `${baseUrl}/uploads/optimized/${img.name}`,
     }));
 
     const totalPages = Math.ceil(totalItems / currentLimit);
@@ -173,6 +198,83 @@ export class ImageService {
         hasNextPage: currentPage < totalPages,
         hasPreviousPage: currentPage > 1,
       },
+    };
+  }
+
+  async processAndSaveImage(file: Express.Multer.File) {
+    const parsedPath = path.parse(file.originalname);
+    const baseName = parsedPath.name;
+    const filename = `${baseName}.webp`;
+
+    const existingImage = await this.findOneByName(filename);
+
+    if (existingImage) {
+      throw new ConflictException(
+        `The image name "${filename}" already exist. change the name.`,
+      );
+    }
+
+    const originalFilePath = path.join(this.originalPath, filename);
+    const optimizedFilePath = path.join(this.optimizedPath, filename);
+
+    try {
+      // save the file in normal size
+      await sharp(file.buffer).webp({ quality: 80 }).toFile(originalFilePath);
+
+      // save the new file widgt
+      await sharp(file.buffer)
+        .resize(150) // this adjusts the width
+        .webp({ quality: 75 })
+        .toFile(optimizedFilePath);
+
+      // save the information in the database
+      const newImage = this.imageRepository.create({ name: filename });
+      const savedImage = await this.imageRepository.save(newImage);
+
+      const baseUrl = 'http://localhost:3001';
+      return {
+        id_image: savedImage.id_image,
+        name: savedImage.name,
+        url: `${baseUrl}/uploads/original/${filename}`,
+        url_optimized: `${baseUrl}/uploads/optimized/${filename}`,
+      };
+    } catch (error) {
+      throw new BadRequestException(
+        `Error to save the image: ${error.message}`,
+      );
+    }
+  }
+
+  async deleteImage(id: number) {
+    const image = await this.findOneById(id)
+
+    if (!image) {
+      throw new NotFoundException(`doesnt found the image ${id}`);
+    }
+
+    const originalFilePath = path.join(this.originalPath, image.name);
+    const optimizedFilePath = path.join(this.optimizedPath, image.name);
+
+    // delete the files
+    const deleteFilePromises = [originalFilePath, optimizedFilePath].map(
+      async (filePath) => {
+        try {
+          if (fs.existsSync(filePath)) {
+            await fs.promises.unlink(filePath);
+          }
+        } catch (error) {
+          console.error(`Error to delete the file image  ${filePath}:`, error);
+        }
+      },
+    );
+
+    await Promise.all(deleteFilePromises);
+
+    await this.imageRepository.remove(image);
+
+    return {
+      message: 'Image delete successfully',
+      id_image: id,
     };
   }
 }
