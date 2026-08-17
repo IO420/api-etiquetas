@@ -89,7 +89,7 @@ export class ImageController {
   @UseInterceptors(FileInterceptor('file'))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
-      throw new BadRequestException('El archivo de imagen es requerido');
+      throw new BadRequestException('file is required');
     }
     return await this.imageService.processAndSaveImage(file);
   }

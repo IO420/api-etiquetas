@@ -181,6 +181,8 @@ export class ImageService {
     const formattedImages = images.map((img) => ({
       id_image: img.id_image,
       name: img.name,
+      width: img.width,
+      height: img.height,
       url: `${baseUrl}/uploads/original/${img.name}`,
       url_optimized: `${baseUrl}/uploads/optimized/${img.name}`,
     }));
@@ -218,6 +220,10 @@ export class ImageService {
     const optimizedFilePath = path.join(this.optimizedPath, filename);
 
     try {
+      const metadata = await sharp(file.buffer).metadata();
+      const width = metadata.width || 0;
+      const height = metadata.height || 0;
+
       // save the file in normal size
       await sharp(file.buffer).webp({ quality: 80 }).toFile(originalFilePath);
 
@@ -228,13 +234,19 @@ export class ImageService {
         .toFile(optimizedFilePath);
 
       // save the information in the database
-      const newImage = this.imageRepository.create({ name: filename });
+      const newImage = this.imageRepository.create({
+        name: filename,
+        width,
+        height,
+      });
       const savedImage = await this.imageRepository.save(newImage);
 
       const baseUrl = 'http://localhost:3001';
       return {
         id_image: savedImage.id_image,
         name: savedImage.name,
+        width: savedImage.width,
+        height: savedImage.height,
         url: `${baseUrl}/uploads/original/${filename}`,
         url_optimized: `${baseUrl}/uploads/optimized/${filename}`,
       };
@@ -246,7 +258,7 @@ export class ImageService {
   }
 
   async deleteImage(id: number) {
-    const image = await this.findOneById(id)
+    const image = await this.findOneById(id);
 
     if (!image) {
       throw new NotFoundException(`doesnt found the image ${id}`);
