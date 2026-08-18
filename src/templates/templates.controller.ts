@@ -14,10 +14,9 @@ export class TemplatesController {
   @Get('public/previews')
   @HttpCode(HttpStatus.OK)
   async getPublicTemplatesWithPreviews(@Query() paginationDto: PaginationDto) {
-    // 1. Traer datos de la BD paginados del más nuevo al más viejo
+    //get the database data
     const result = await this.templatesService.findPublicTemplatesPaginated(paginationDto);
 
-    // 2. Generar las imágenes de preview para cada plantilla obtenida
     const templatesWithPreviews = await Promise.all(
       result.data.map(async (template) => {
         const preview = await this.imageService.generateLabelPreview({
@@ -31,7 +30,7 @@ export class TemplatesController {
           id_template: template.id_template,
           title: template.title,
           createdAt: template.createdAt,
-          previewUrl: preview.url, // URL estática generada
+          previewUrl: preview.url,
         };
       }),
     );

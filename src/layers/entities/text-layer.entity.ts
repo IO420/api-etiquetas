@@ -9,18 +9,18 @@ export class TextLayer extends Layers {
   @Column({ type: 'varchar', length: 100, nullable: true })
   label: string;
 
-  @Column({ type: 'int', default: 16 })
+  @Column({ type: 'int', nullable: true })
   fontSize: number;
 
-  @Column({ type: 'varchar', length: 100, default: 'Arial' })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   textFont: string;
 
-  @Column({ type: 'varchar', length: 50, default: '#000000' })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   color: string;
 
-  @Column({ type: 'varchar', length: 20, default: 'normal' })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   fontWeight: string; // bold, normal, etc.
 
-  @Column({ type: 'varchar', length: 20, default: 'left' })
-  textAlign: string; // left, center, right
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  textAlign: string;
 }

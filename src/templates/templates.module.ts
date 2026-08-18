@@ -8,7 +8,7 @@ import { TextLayer } from '@/layers/entities/text-layer.entity';
 import { ComponentLayer } from '@/layers/entities/component-layer.entity';
 import { ImageLayer } from '@/layers/entities/image-layer.entity';
 import { ImageModule } from '@/image/image.module';
-import { ShapeLayer } from '@/layers/entities/shape-layer.entity';
+import { CircleLayer, RectangleLayer, ShapeLayer, WaveLayer } from '@/layers/entities/shape-layer.entity';
 
 @Module({
   imports: [
@@ -19,6 +19,9 @@ import { ShapeLayer } from '@/layers/entities/shape-layer.entity';
       ComponentLayer,
       ImageLayer,
       ShapeLayer,
+      RectangleLayer,
+      CircleLayer,
+      WaveLayer
     ]),
     ImageModule,
   ],

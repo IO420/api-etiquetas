@@ -43,7 +43,6 @@ export class TemplatesService {
       skip: skip,
     });
 
-    // Transformamos cada plantilla de BD al formato que requiere el Canvas
     const formattedTemplates = templates.map((template) => {
       const flatLayers: Layers[] = [];
 
@@ -213,6 +212,7 @@ export class TemplatesService {
           fontSize: dto.fontSize,
           textFont: dto.textFont,
           color: dto.color,
+          textAlign:dto.textAlign
         });
 
       case LayerType.RECTANGLE:
@@ -221,6 +221,7 @@ export class TemplatesService {
         return this.layersRepository.manager.create(ShapeLayer, {
           ...baseProperties,
           fillColor: dto.fillColor,
+          strokeColor:dto.strokeColor
         });
 
       case LayerType.TEMPLATE:
@@ -235,7 +236,7 @@ export class TemplatesService {
       default:
         return this.layersRepository.manager.create(ImageLayer, {
           ...baseProperties,
-          imageUrl: dto.name, // Mapea el campo 'name' del JSON al 'imageUrl' de la DB
+          imageUrl: dto.name,
         });
     }
   }

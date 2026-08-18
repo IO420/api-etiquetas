@@ -95,6 +95,7 @@ export class ImageService {
     const ctx = canvas.getContext('2d');
 
     for (const layer of dto.layers) {
+      // console.log(layer)
       switch (layer.type) {
         case 'image':
           await drawImage(ctx, layer, this.originalPath);

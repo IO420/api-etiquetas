@@ -1,6 +1,7 @@
 import { ChildEntity, Column } from 'typeorm';
 import { Layers, LayerType } from './layer.entity';
 
+@ChildEntity()
 export abstract class ShapeLayer extends Layers {
   @Column({ type: 'varchar', length: 50, nullable: true })
   fillColor: string;

@@ -55,7 +55,7 @@ export class CreateLayerDto {
   @IsOptional()
   rotation?: number;
 
-  // Propiedades opcionales para capas de Texto
+  // text props
   @IsString()
   @IsOptional()
   text?: string;
@@ -76,12 +76,20 @@ export class CreateLayerDto {
   @IsOptional()
   color?: string;
 
-  // Propiedades opcionales para Formas / Figuras
+  @IsString()
+  @IsOptional()
+  textAlign?: string;
+
+  // shape props
   @IsString()
   @IsOptional()
   fillColor?: string;
 
-  // Sub-plantilla anidada (si es tipo TEMPLATE)
+  @IsString()
+  @IsOptional()
+  strokeColor: string;
+
+  // template props
   @IsNumber()
   @IsOptional()
   childTemplateId?: number;

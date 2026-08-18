@@ -50,7 +50,6 @@ export abstract class Layers {
   @JoinColumn({ name: 'templateId' })
   template: Template;
 
-  // Si el tipo es TEMPLATE, conecta con la sub-plantilla reutilizable (ej: Campos Alumno)
   @ManyToOne(() => Template, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'childTemplateId' })
   childTemplate?: Template;
