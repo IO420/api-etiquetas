@@ -103,8 +103,8 @@ export class ShapeBaseDto {
   strokeColor?: string;
 
   @IsOptional()
-  @IsNumber()
-  strokeWidth?: number;
+  @IsString()
+  strokeWidth?: string;
 
   @IsOptional()
   @IsArray()

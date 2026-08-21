@@ -38,7 +38,7 @@ export function drawRectangle(
     ctx.strokeStyle =
       layer.strokeColor ?? '#fff';
 
-    ctx.lineWidth = layer.strokeWidth;
+    ctx.lineWidth = Number(layer.strokeWidth);
 
     if(layer.dash?.length){
       ctx.setLineDash(layer.dash);

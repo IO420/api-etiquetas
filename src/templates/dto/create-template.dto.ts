@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsArray,
   ValidateNested,
+  IsNotEmpty,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { LayerType } from '@/layers/entities/layer.entity';
@@ -36,12 +37,12 @@ export class SizeDto {
 
 export class CreateLayerDto {
   @IsEnum(LayerType)
-  @IsOptional()
-  type?: LayerType; // Si no viene, se infiere según las propiedades (por defecto IMAGE si trae 'name')
+  @IsNotEmpty()
+  type: LayerType;
 
   @IsString()
   @IsOptional()
-  name?: string; // Nombre del archivo de imagen o identificador
+  name?: string;
 
   @ValidateNested()
   @Type(() => PositionDto)
@@ -88,6 +89,10 @@ export class CreateLayerDto {
   @IsString()
   @IsOptional()
   strokeColor: string;
+
+  @IsString()
+  @IsOptional()
+  strokeWidth: string;
 
   // template props
   @IsNumber()

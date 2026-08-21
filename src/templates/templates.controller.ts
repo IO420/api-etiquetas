@@ -1,4 +1,13 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { TemplatesService } from './templates.service';
 import { CreateTemplateDto } from './dto/create-template.dto';
 import { ImageService } from '@/image/image.service';
@@ -11,11 +20,17 @@ export class TemplatesController {
     private readonly imageService: ImageService,
   ) {}
 
+  @Get('')
+  async getAll() {
+    return await this.templatesService.getAll();
+  }
+
   @Get('public/previews')
   @HttpCode(HttpStatus.OK)
   async getPublicTemplatesWithPreviews(@Query() paginationDto: PaginationDto) {
     //get the database data
-    const result = await this.templatesService.findPublicTemplatesPaginated(paginationDto);
+    const result =
+      await this.templatesService.findPublicTemplatesPaginated(paginationDto);
 
     const templatesWithPreviews = await Promise.all(
       result.data.map(async (template) => {

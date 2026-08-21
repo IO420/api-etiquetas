@@ -98,7 +98,7 @@ export function drawWave(ctx: SKRSContext2D, layer: WaveShapeDto) {
   // borde
   if (layer.strokeWidth) {
     ctx.strokeStyle = layer.strokeColor ?? '#fff';
-    ctx.lineWidth = layer.strokeWidth;
+    ctx.lineWidth = Number(layer.strokeWidth);
     ctx.lineJoin = 'round';
 
     ctx.setLineDash(layer.dash?.length ? layer.dash : [50, 10]);

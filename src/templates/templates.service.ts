@@ -5,7 +5,12 @@ import { Template } from './entities/template.entity';
 import { Layers, LayerType } from '@/layers/entities/layer.entity';
 import { CreateLayerDto, CreateTemplateDto } from './dto/create-template.dto';
 import { TextLayer } from '@/layers/entities/text-layer.entity';
-import { ShapeLayer } from '@/layers/entities/shape-layer.entity';
+import {
+  CircleLayer,
+  RectangleLayer,
+  ShapeLayer,
+  WaveLayer,
+} from '@/layers/entities/shape-layer.entity';
 import { ComponentLayer } from '@/layers/entities/component-layer.entity';
 import { ImageLayer } from '@/layers/entities/image-layer.entity';
 import { PaginationDto } from '@/image/dto/image.dto';
@@ -19,29 +24,47 @@ export class TemplatesService {
     private readonly layersRepository: Repository<Layers>,
   ) {}
 
+  async getAll() {
+    return this.templateRepository.find();
+  }
+
   async findPublicTemplatesPaginated(paginationDto: PaginationDto) {
     const { page = 1, limit = 10 } = paginationDto;
     const skip = (page - 1) * limit;
 
-    const [templates, total] = await this.templateRepository.findAndCount({
-      where: { is_public: true },
-      relations: {
-        creator: true,
-        layers: {
-          childTemplate: {
-            layers: true,
-          },
+    const [items, total] = await this.templateRepository
+      .createQueryBuilder('template')
+      .select('template.id_template')
+      .where('template.is_public = :isPublic', { isPublic: true })
+      .orderBy('template.id_template', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    const ids = items.map((item) => item.id_template);
+
+    if (ids.length === 0) {
+      return {
+        data: [],
+        meta: {
+          total,
+          page: Number(page),
+          limit: Number(limit),
+          totalPages: 0,
         },
-      },
-      order: {
-        id_template: 'DESC', 
-        layers: {
-          order_index: 'ASC',
-        },
-      },
-      take: limit,
-      skip: skip,
-    });
+      };
+    }
+
+    const templates = await this.templateRepository
+      .createQueryBuilder('template')
+      .leftJoinAndSelect('template.creator', 'creator')
+      .leftJoinAndSelect('template.layers', 'layers')
+      .leftJoinAndSelect('layers.childTemplate', 'childTemplate')
+      .leftJoinAndSelect('childTemplate.layers', 'childLayers')
+      .where('template.id_template IN (:...ids)', { ids })
+      .orderBy('template.id_template', 'DESC')
+      .addOrderBy('layers.order_index', 'ASC')
+      .getMany();
 
     const formattedTemplates = templates.map((template) => {
       const flatLayers: Layers[] = [];
@@ -79,8 +102,8 @@ export class TemplatesService {
       data: formattedTemplates,
       meta: {
         total,
-        page,
-        limit,
+        page: Number(page),
+        limit: Number(limit),
         totalPages: Math.ceil(total / limit),
       },
     };
@@ -169,7 +192,6 @@ export class TemplatesService {
   async create(createTemplateDto: CreateTemplateDto, userId?: number) {
     const { title, is_public, canvas, layers } = createTemplateDto;
 
-    // 1. Instanciar la plantilla principal
     const template = this.templateRepository.create({
       title,
       is_public: is_public ?? false,
@@ -178,19 +200,17 @@ export class TemplatesService {
       creator: userId ? ({ id_user: userId } as any) : null,
     });
 
-    // 2. Mapear cada capa del DTO a su respectiva entidad
     const layerEntities: Layers[] = layers.map((layerDto, index) => {
       return this.mapDtoToLayerEntity(layerDto, index);
     });
 
     template.layers = layerEntities;
 
-    // 3. Guardar en base de datos (con relación en cascada)
     return await this.templateRepository.save(template);
   }
 
   private mapDtoToLayerEntity(dto: CreateLayerDto, orderIndex: number): Layers {
-    // Si no se especifica el tipo, inferir 'IMAGE' si trae la propiedad name/imageUrl
+
     const type = dto.type;
 
     const baseProperties = {
@@ -198,8 +218,8 @@ export class TemplatesService {
       order_index: orderIndex,
       positionX: dto.position.x,
       positionY: dto.position.y,
-      width: dto.size.width,
-      height: dto.size.height,
+      width: dto.size?.width,
+      height: dto.size?.height,
       rotation: dto.rotation || 0,
     };
 
@@ -212,16 +232,29 @@ export class TemplatesService {
           fontSize: dto.fontSize,
           textFont: dto.textFont,
           color: dto.color,
-          textAlign:dto.textAlign
+          textAlign: dto.textAlign,
         });
 
       case LayerType.RECTANGLE:
-      case LayerType.WAVE:
-      case LayerType.CIRCLE:
-        return this.layersRepository.manager.create(ShapeLayer, {
+        return this.layersRepository.manager.create(RectangleLayer, {
           ...baseProperties,
           fillColor: dto.fillColor,
-          strokeColor:dto.strokeColor
+          strokeColor: dto.strokeColor,
+        });
+
+      case LayerType.WAVE:
+        return this.layersRepository.manager.create(WaveLayer, {
+          ...baseProperties,
+          fillColor: dto.fillColor,
+          strokeColor: dto.strokeColor,
+          strokeWidth:dto.strokeWidth
+        });
+
+      case LayerType.CIRCLE:
+        return this.layersRepository.manager.create(CircleLayer, {
+          ...baseProperties,
+          fillColor: dto.fillColor,
+          strokeColor: dto.strokeColor,
         });
 
       case LayerType.TEMPLATE:
