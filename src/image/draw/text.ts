@@ -42,7 +42,7 @@ export function drawText(
   const fontSize = label.fontSize || 80;
 
   ctx.save();
-  ctx.translate(label.position.x, label.position.y);
+  ctx.translate(label.positionX, label.positionY);
 
   // degrees to radians
   const rotation = ((label.rotation ?? 0) * Math.PI) / 180;

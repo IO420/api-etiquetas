@@ -12,8 +12,8 @@ export function drawRectangle(
   ctx.save();
 
   ctx.translate(
-    layer.position.x,
-    layer.position.y
+    layer.positionX,
+    layer.positionY
   );
 
   ctx.beginPath();

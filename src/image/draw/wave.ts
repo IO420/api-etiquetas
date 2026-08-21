@@ -78,7 +78,7 @@ export function buildWavePath(ctx: SKRSContext2D) {
 export function drawWave(ctx: SKRSContext2D, layer: WaveShapeDto) {
   ctx.save();
 
-  ctx.translate(layer.position.x, layer.position.y);
+  ctx.translate(layer.positionX, layer.positionY);
 
   ctx.scale(
     (layer.width || ORIGINAL_WIDTH) / ORIGINAL_WIDTH,

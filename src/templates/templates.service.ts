@@ -112,7 +112,8 @@ export class TemplatesService {
   // Mapeador helper de Entidad TypeORM -> DTO de Canvas
   private mapEntityToCanvasLayer(layer: any) {
     const basePosition = {
-      position: { x: layer.positionX, y: layer.positionY },
+      positionX:layer.positionX,
+      positionY:layer.positionY
     };
 
     switch (layer.type) {
@@ -120,7 +121,7 @@ export class TemplatesService {
         const imgLayer = layer as ImageLayer;
         return {
           type: 'image',
-          image: imgLayer.imageUrl,
+          imageUrl: imgLayer.imageUrl,
           width: imgLayer.width,
           height: imgLayer.height,
           ...basePosition,
@@ -210,7 +211,6 @@ export class TemplatesService {
   }
 
   private mapDtoToLayerEntity(dto: CreateLayerDto, orderIndex: number): Layers {
-
     const type = dto.type;
 
     const baseProperties = {
@@ -247,7 +247,7 @@ export class TemplatesService {
           ...baseProperties,
           fillColor: dto.fillColor,
           strokeColor: dto.strokeColor,
-          strokeWidth:dto.strokeWidth
+          strokeWidth: dto.strokeWidth,
         });
 
       case LayerType.CIRCLE:
@@ -298,11 +298,9 @@ export class TemplatesService {
 
     for (const layer of template.layers) {
       if (layer.type === LayerType.TEMPLATE && layer.childTemplate) {
-        // Desplazamiento (offset) de la sub-plantilla contenedora
         const offsetX = layer.positionX || 0;
         const offsetY = layer.positionY || 0;
 
-        // Resolvemos las capas hijas ajustando sus coordenadas X e Y
         for (const childLayer of layer.childTemplate.layers) {
           flatLayers.push({
             ...childLayer,

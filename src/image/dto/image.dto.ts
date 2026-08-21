@@ -11,27 +11,20 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class PositionDto {
-  @IsNumber({}, { message: 'El valor de X debe ser un número' })
-  @IsNotEmpty()
-  x: number;
-
-  @IsNumber({}, { message: 'El valor de Y debe ser un número' })
-  @IsNotEmpty()
-  y: number;
-}
-
 export class ImageDto {
   @IsIn(['image'])
   type: 'image';
 
   @IsString()
-  image: string;
+  imageUrl: string;
 
-  @ValidateNested()
-  @Type(() => PositionDto)
-  @IsNotEmpty()
-  position: PositionDto;
+  @IsOptional()
+  @IsNumber()
+  positionX: number;
+
+  @IsOptional()
+  @IsNumber()
+  positionY: number;
 
   @IsOptional()
   @IsNumber()
@@ -58,10 +51,13 @@ export class TextDto {
   @IsIn(['left', 'center', 'right'])
   textAlign?: 'left' | 'center' | 'right';
 
-  @ValidateNested()
-  @Type(() => PositionDto)
-  @IsNotEmpty()
-  position: PositionDto;
+  @IsOptional()
+  @IsNumber()
+  positionX: number;
+
+  @IsOptional()
+  @IsNumber()
+  positionY: number;
 
   @IsOptional()
   @IsString()
@@ -89,10 +85,13 @@ export class TextDto {
 }
 
 export class ShapeBaseDto {
-  @ValidateNested()
-  @Type(() => PositionDto)
-  @IsNotEmpty()
-  position: PositionDto;
+  @IsOptional()
+  @IsNumber()
+  positionX: number;
+
+  @IsOptional()
+  @IsNumber()
+  positionY: number;
 
   @IsOptional()
   @IsString()

@@ -21,8 +21,7 @@ export async function drawImage(
   label: ImageDto,
   assetsPath: string,
 ) {
-  const imagePath = getImage(label.image, assetsPath);
-
+  const imagePath = getImage(label.imageUrl, assetsPath);
   const img = await loadImage(imagePath);
 
   const originalWidth = img.width;
@@ -65,8 +64,8 @@ export async function drawImage(
 
   ctx.drawImage(
     img,
-    label.position.x,
-    label.position.y,
+    label.positionX,
+    label.positionY,
     finalWidth,
     finalHeight,
   );

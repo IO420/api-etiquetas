@@ -86,13 +86,18 @@ export class ImageService {
     return await this.imageRepository.save(create);
   }
 
-  async generateCustomLabel(dto: GenerateTagDto): Promise<Buffer> {
+  async generateCustomLabel(
+    dto: GenerateTagDto,
+    scale: number,
+  ): Promise<Buffer> {
     // create canvas
     const canvasWidth = dto.canvasWidth;
     const canvasHeight = dto.canvasHeight;
 
-    const canvas = createCanvas(canvasWidth, canvasHeight);
+    const canvas = createCanvas(canvasWidth * scale, canvasHeight * scale);
     const ctx = canvas.getContext('2d');
+
+    ctx.scale(scale, scale);
 
     for (const layer of dto.layers) {
       switch (layer.type) {
@@ -131,11 +136,14 @@ export class ImageService {
     canvasHeight: number;
     layers: any[];
   }): Promise<{ url: string }> {
-    const buffer = await this.generateCustomLabel({
-      canvasWidth: templateData.canvasWidth,
-      canvasHeight: templateData.canvasHeight,
-      layers: templateData.layers,
-    });
+    const buffer = await this.generateCustomLabel(
+      {
+        canvasWidth: templateData.canvasWidth,
+        canvasHeight: templateData.canvasHeight,
+        layers: templateData.layers,
+      },
+      1,
+    );
 
     const filename = `${templateData.templateId}_${templateData.canvasWidth}_${templateData.canvasHeight}.webp`;
     const filePath = path.join(this.uploadsPath, filename);
@@ -148,7 +156,7 @@ export class ImageService {
   }
 
   async generateCustomLabelPdf(dto: GenerateTagDto): Promise<Buffer> {
-    const imageBuffer = await this.generateCustomLabel(dto);
+    const imageBuffer = await this.generateCustomLabel(dto,4);
 
     const widthInPoints = 20 * 28.3465; // ~566.93 puntos
     const heightInPoints = 26.5 * 28.3465; // ~751.18 puntos

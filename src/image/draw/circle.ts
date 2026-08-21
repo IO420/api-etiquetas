@@ -8,7 +8,7 @@ export function buildCirclePath(ctx: SKRSContext2D, radius: number) {
 export function drawCircle(ctx: SKRSContext2D, layer: CircleShapeDto) {
   ctx.save();
 
-  ctx.translate(layer.position.x, layer.position.y);
+  ctx.translate(layer.positionX, layer.positionY);
 
   ctx.beginPath();
 
