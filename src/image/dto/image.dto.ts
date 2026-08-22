@@ -147,6 +147,13 @@ export class RectangleShapeDto extends ShapeBaseDto {
   borderRadius?: number;
 }
 
+export enum PageSize {
+  LETTER = 'LETTER',
+  LEGAL = 'LEGAL',
+  A4 = 'A4',
+  TABLOID = 'TABLOID', // Doble carta
+}
+
 export type LayerDto =
   ImageDto | TextDto | WaveShapeDto | CircleShapeDto | RectangleShapeDto;
 
@@ -158,6 +165,10 @@ export class GenerateTagDto {
   @IsNotEmpty()
   @IsNumber()
   canvasHeight: number;
+
+  @IsIn(['LETTER', 'LEGAL', 'A4', 'TABLOID'])
+  @IsOptional()
+  pageSize?: PageSize = PageSize.LETTER;
 
   @IsArray()
   @ValidateNested({ each: true })

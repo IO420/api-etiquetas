@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { createCanvas } from '@napi-rs/canvas';
-import { GeneratePreviewDto, GenerateTagDto } from './dto/image.dto';
+import { GeneratePreviewDto, GenerateTagDto, PageSize } from './dto/image.dto';
 import { drawWave } from './draw/wave';
 import { drawCircle } from './draw/circle';
 import { drawRectangle } from './draw/rectangle';
@@ -156,7 +156,7 @@ export class ImageService {
   }
 
   async generateCustomLabelPdf(dto: GenerateTagDto): Promise<Buffer> {
-    const imageBuffer = await this.generateCustomLabel(dto,4);
+    const imageBuffer = await this.generateCustomLabel(dto, 4);
 
     const widthInPoints = 20 * 28.3465; // ~566.93 puntos
     const heightInPoints = 26.5 * 28.3465; // ~751.18 puntos
@@ -303,6 +303,74 @@ export class ImageService {
       message: 'Image delete successfully',
       id_image: id,
     };
+  }
+
+  async generatePencilLabelsSheetPdf(dto: GenerateTagDto): Promise<Buffer> {
+    const imageBuffer = await this.generateCustomLabel(dto, 4);
+
+    const PAGE_DIMENSIONS: Record<
+      PageSize,
+      { width: number; height: number; pdfSize: string | [number, number] }
+    > = {
+      [PageSize.LETTER]: { width: 612, height: 792, pdfSize: 'LETTER' },
+      [PageSize.LEGAL]: { width: 612, height: 1008, pdfSize: 'LEGAL' },
+      [PageSize.A4]: { width: 595.28, height: 841.89, pdfSize: 'A4' },
+      [PageSize.TABLOID]: { width: 792, height: 1224, pdfSize: 'TABLOID' },
+    };
+
+    const selectedSize = dto.pageSize || PageSize.LETTER;
+    const {
+      width: PAGE_WIDTH,
+      height: PAGE_HEIGHT,
+      pdfSize,
+    } = PAGE_DIMENSIONS[selectedSize];
+
+    const MARGIN_LEFT = 10;
+    const MARGIN_TOP = 10;
+
+    const LABEL_WIDTH = 190;
+    const LABEL_HEIGHT = (dto.canvasHeight / dto.canvasWidth) * LABEL_WIDTH;
+
+    const GAP_X = PageSize.A4 ?2:8;
+    const GAP_Y = 5;
+
+    const COLS = Math.floor(
+      (PAGE_WIDTH - MARGIN_LEFT * 2 + GAP_X) / (LABEL_WIDTH + GAP_X),
+    );
+    const ROWS = Math.floor(
+      (PAGE_HEIGHT - MARGIN_TOP * 2 + GAP_Y) / (LABEL_HEIGHT + GAP_Y),
+    );
+    return new Promise((resolve, reject) => {
+      const chunks: Buffer[] = [];
+
+      const doc = new PDFDocument({
+        size: pdfSize as any,
+        margins: {
+          top: MARGIN_TOP,
+          bottom: MARGIN_TOP,
+          left: MARGIN_LEFT,
+          right: MARGIN_LEFT,
+        },
+      });
+
+      doc.on('data', (chunk) => chunks.push(chunk));
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+      doc.on('error', (err) => reject(err));
+
+      for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+          const x = MARGIN_LEFT + col * (LABEL_WIDTH + GAP_X);
+          const y = MARGIN_TOP + row * (LABEL_HEIGHT + GAP_Y);
+
+          doc.image(imageBuffer, x, y, {
+            width: LABEL_WIDTH,
+            height: LABEL_HEIGHT,
+          });
+        }
+      }
+
+      doc.end();
+    });
   }
 }
 //IO

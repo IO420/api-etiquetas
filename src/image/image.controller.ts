@@ -36,7 +36,7 @@ export class ImageController {
   @HttpCode(HttpStatus.OK)
   async generateLabel(@Body() dto: GenerateTagDto, @Res() res: Response) {
     try {
-      const imageBuffer = await this.imageService.generateCustomLabel(dto,4);
+      const imageBuffer = await this.imageService.generateCustomLabel(dto, 4);
 
       res.setHeader('Content-Type', 'image/png');
       res.setHeader('Content-Disposition', 'inline; filename="etiqueta.png"');
@@ -98,5 +98,18 @@ export class ImageController {
   @HttpCode(HttpStatus.OK)
   async deleteImage(@Param('id') id: number) {
     return await this.imageService.deleteImage(id);
+  }
+
+  @Post('print-pencil-labels')
+  async printPencilLabels(@Body() dto: GenerateTagDto, @Res() res: Response) {
+    const pdfBuffer = await this.imageService.generatePencilLabelsSheetPdf(dto);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename=etiquetas_lapices.pdf',
+      'Content-Length': pdfBuffer.length,
+    });
+
+    res.end(pdfBuffer);
   }
 }
