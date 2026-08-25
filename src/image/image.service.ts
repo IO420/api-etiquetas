@@ -326,7 +326,7 @@ export class ImageService {
     } = PAGE_DIMENSIONS[selectedSize];
 
     const MARGIN_LEFT = 10;
-    const MARGIN_TOP = 10;
+    const MARGIN_TOP = PageSize.A4 ?25:10;
 
     const LABEL_WIDTH = 190;
     const LABEL_HEIGHT = (dto.canvasHeight / dto.canvasWidth) * LABEL_WIDTH;

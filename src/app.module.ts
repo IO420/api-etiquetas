@@ -9,6 +9,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LayersModule } from './layers/layers.module';
 import { TemplatesModule } from './templates/templates.module';
 import { UsersModule } from './users/users.module';
+import { FontsModule } from './fonts/fonts.module';
 
 @Module({
   imports: [
@@ -34,7 +35,7 @@ import { UsersModule } from './users/users.module';
         return {
           type: 'mariadb',
           host: configService.get<string>('api_db_host'),
-          port: Number(configService.get<string>('api_db_port')),
+          port: configService.get<number>('api_db_port'),
           username: configService.get<string>('api_db_username'),
           password: configService.get<string>('api_db_password'),
           database: configService.get<string>('api_db_database'),
@@ -49,6 +50,7 @@ import { UsersModule } from './users/users.module';
     LayersModule,
     TemplatesModule,
     UsersModule,
+    FontsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
