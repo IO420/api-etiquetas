@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -64,5 +65,10 @@ export class TemplatesController {
   @Get(':id/resolved')
   async getResolved(@Param('id') id: number) {
     return await this.templatesService.getTemplateWithResolvedComponents(id);
+  }
+
+  @Delete(':id')
+  async deleteTempleteAndLayers(@Param('id') id:number){
+    return await this.templatesService.deleteTemplateAndLayers(id);
   }
 }

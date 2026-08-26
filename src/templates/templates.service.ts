@@ -1,5 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Template } from './entities/template.entity';
 import { Layers, LayerType } from '@/layers/entities/layer.entity';
@@ -14,6 +18,7 @@ import {
 import { ComponentLayer } from '@/layers/entities/component-layer.entity';
 import { ImageLayer } from '@/layers/entities/image-layer.entity';
 import { PaginationDto } from '@/image/dto/image.dto';
+import { DataSource } from 'typeorm/browser';
 
 @Injectable()
 export class TemplatesService {
@@ -22,6 +27,8 @@ export class TemplatesService {
     private readonly templateRepository: Repository<Template>,
     @InjectRepository(Layers)
     private readonly layersRepository: Repository<Layers>,
+
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   async getAll() {
@@ -112,8 +119,8 @@ export class TemplatesService {
   // Mapeador helper de Entidad TypeORM -> DTO de Canvas
   private mapEntityToCanvasLayer(layer: any) {
     const basePosition = {
-      positionX:layer.positionX,
-      positionY:layer.positionY
+      positionX: layer.positionX,
+      positionY: layer.positionY,
     };
 
     switch (layer.type) {
@@ -324,5 +331,41 @@ export class TemplatesService {
       canvasHeight: template.canvasHeight,
       layers: flatLayers,
     };
+  }
+
+  async deleteTemplateAndLayers(id: number): Promise<{ message: string }> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const template = await queryRunner.manager.findOne(Template, {
+        where: { id_template: id },
+      });
+
+      if (!template) {
+        throw new NotFoundException(`Template ${id} not found`);
+      }
+
+      await queryRunner.manager.delete(Layers, {
+        template: { id_template: id },
+      });
+
+      await queryRunner.manager.delete(Template, id);
+
+      await queryRunner.commitTransaction();
+
+      return { message: `Template ${id} delete successfully` };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        'Error to delete the template',
+      );
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

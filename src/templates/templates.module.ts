@@ -9,6 +9,7 @@ import { ComponentLayer } from '@/layers/entities/component-layer.entity';
 import { ImageLayer } from '@/layers/entities/image-layer.entity';
 import { ImageModule } from '@/image/image.module';
 import { CircleLayer, RectangleLayer, ShapeLayer, WaveLayer } from '@/layers/entities/shape-layer.entity';
+import { DataSource } from 'typeorm';
 
 @Module({
   imports: [
