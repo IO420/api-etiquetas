@@ -1,47 +1,34 @@
 import { SKRSContext2D } from '@napi-rs/canvas';
 import { RectangleShapeDto } from '../dto/image.dto';
 
-
-export function drawRectangle(
-  ctx: SKRSContext2D,
-  layer: RectangleShapeDto,
-) {
-
+export function drawRectangle(ctx: SKRSContext2D, layer: RectangleShapeDto) {
   const radius = layer.borderRadius ?? 0;
 
   ctx.save();
 
-  ctx.translate(
-    layer.positionX,
-    layer.positionY
-  );
+  ctx.translate(layer.positionX, layer.positionY);
 
   ctx.beginPath();
 
-  ctx.roundRect(
-    0,
-    0,
-    layer.width,
-    layer.height,
-    radius
-  );
+  ctx.roundRect(0, 0, layer.width, layer.height, radius);
 
-
-  if(layer.fillColor){
+  if (layer.fillColor) {
     ctx.fillStyle = layer.fillColor;
     ctx.fill();
   }
 
-
-  if(layer.strokeWidth){
-
-    ctx.strokeStyle =
-      layer.strokeColor ?? '#fff';
+  if (layer.strokeWidth) {
+    ctx.strokeStyle = layer.strokeColor ?? '#fff';
 
     ctx.lineWidth = Number(layer.strokeWidth);
 
-    if(layer.dash?.length){
+    if (layer.dash?.length) {
       ctx.setLineDash(layer.dash);
+    }
+
+    if (layer.dashPattern?.length) {
+      const dash: number[] = layer.dashPattern.split(',').map(Number);
+      ctx.setLineDash(dash);
     }
 
     ctx.stroke();
@@ -49,6 +36,6 @@ export function drawRectangle(
     ctx.setLineDash([]);
   }
 
-
   ctx.restore();
 }
+//IO

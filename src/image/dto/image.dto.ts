@@ -109,6 +109,10 @@ export class ShapeBaseDto {
   @IsArray()
   @IsNumber({}, { each: true })
   dash?: number[];
+
+  @IsOptional()
+  @IsString()
+  dashPattern?:string
 }
 
 export class WaveShapeDto extends ShapeBaseDto {

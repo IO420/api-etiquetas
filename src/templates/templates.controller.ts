@@ -46,6 +46,8 @@ export class TemplatesController {
           id_template: template.id_template,
           title: template.title,
           createdAt: template.createdAt,
+          height:template.canvasHeight,
+          width:template.canvasWidth,
           previewUrl: preview.url,
         };
       }),
@@ -72,3 +74,4 @@ export class TemplatesController {
     return await this.templatesService.deleteTemplateAndLayers(id);
   }
 }
+//IO
