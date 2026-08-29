@@ -135,6 +135,8 @@ export class TemplatesService {
           imageUrl: imgLayer.imageUrl,
           width: imgLayer.width,
           height: imgLayer.height,
+          flipX: imgLayer.flipX,
+          flipY: imgLayer.flipY,
           ...basePosition,
         };
       }
@@ -380,7 +382,6 @@ export class TemplatesService {
     await queryRunner.startTransaction();
 
     try {
-      // 1. Verificar si la plantilla existe
       const template = await queryRunner.manager.findOne(Template, {
         where: { id_template: id },
       });
@@ -391,7 +392,6 @@ export class TemplatesService {
 
       const { title, is_public, canvas, layers } = updateTemplateDto;
 
-      // 2. Actualizar propiedades básicas de la plantilla si vienen en el DTO
       if (title !== undefined) template.title = title;
       if (is_public !== undefined) template.is_public = is_public;
       if (canvas) {
@@ -401,27 +401,26 @@ export class TemplatesService {
 
       await queryRunner.manager.save(Template, template);
 
-      // 3. Si se envían capas nuevas, reemplazar las existentes
       if (layers && layers.length > 0) {
-        // Eliminar capas anteriores vinculadas a esta plantilla
+        // delete the layers
         await queryRunner.manager.delete(Layers, {
           template: { id_template: id },
         });
 
-        // Crear las nuevas entidades de capas
+        // create new layers
         const newLayerEntities: Layers[] = layers.map((layerDto, index) => {
           const layerEntity = this.mapDtoToLayerEntity(layerDto, index);
           layerEntity.template = template; // Asignar la plantilla padre
           return layerEntity;
         });
 
-        // Guardar las nuevas capas
+        // save the layers
         await queryRunner.manager.save(Layers, newLayerEntities);
       }
 
       await queryRunner.commitTransaction();
 
-      // Retornar la plantilla actualizada completa
+      // return the new template
       return this.getTemplateWithResolvedComponents(id);
     } catch (error) {
       await queryRunner.rollbackTransaction();

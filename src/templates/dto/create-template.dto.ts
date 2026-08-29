@@ -63,6 +63,14 @@ export class CreateLayerDto {
   @IsOptional()
   rotation?: number;
 
+  @IsBoolean()
+  @IsOptional()
+  flipX?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  flipY?: boolean;
+
   // text props
   @IsString()
   @IsOptional()

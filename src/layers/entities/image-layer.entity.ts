@@ -8,4 +8,10 @@ export class ImageLayer extends Layers {
 
   @Column({ type: 'varchar', length: 50, default: 'cover' })
   objectFit: string; // cover, contain, fill
+
+  @Column({ type: 'boolean', default: false })
+  flipX: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  flipY: boolean;
 }

@@ -8,6 +8,7 @@ import {
   IsIn,
   IsInt,
   Min,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -33,6 +34,18 @@ export class ImageDto {
   @IsOptional()
   @IsNumber()
   height?: number;
+
+  @IsOptional()
+  @IsNumber()
+  rotation?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  flipX?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  flipY?: boolean;
 }
 
 export class TextDto {

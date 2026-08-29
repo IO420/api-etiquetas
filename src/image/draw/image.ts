@@ -1,5 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
-import { ImageDto } from '../dto/image.dto';
+import { ImageDto } from '../dto/image.dto'; // Asumiendo que esta es la ruta correcta
 import { loadImage, SKRSContext2D } from '@napi-rs/canvas';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -21,6 +21,7 @@ export async function drawImage(
   label: ImageDto,
   assetsPath: string,
 ) {
+  console.log(label)
   const imagePath = getImage(label.imageUrl, assetsPath);
   const img = await loadImage(imagePath);
 
@@ -62,11 +63,27 @@ export async function drawImage(
   const finalWidth = width ?? originalWidth;
   const finalHeight = height ?? originalHeight;
 
-  ctx.drawImage(
-    img,
-    label.positionX,
-    label.positionY,
-    finalWidth,
-    finalHeight,
-  );
+  ctx.save();
+
+  const scaleX = label.flipX ? -1 : 1;
+  const scaleY = label.flipY ? -1 : 1;
+
+  const centerX = label.positionX + finalWidth / 2;
+  const centerY = label.positionY + finalHeight / 2;
+
+  ctx.translate(centerX, centerY);
+
+  ctx.scale(scaleX, scaleY);
+
+  if (label.rotation) {
+    const radians = label.rotation * (Math.PI / 180);
+    ctx.rotate(radians);
+  }
+
+  ctx.translate(-centerX, -centerY);
+
+  ctx.drawImage(img, label.positionX, label.positionY, finalWidth, finalHeight);
+
+  ctx.restore();
 }
+//IO
