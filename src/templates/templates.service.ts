@@ -7,7 +7,11 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Template } from './entities/template.entity';
 import { Layers, LayerType } from '@/layers/entities/layer.entity';
-import { CreateLayerDto, CreateTemplateDto } from './dto/create-template.dto';
+import {
+  CreateLayerDto,
+  CreateTemplateDto,
+  UpdateTemplateDto,
+} from './dto/create-template.dto';
 import { TextLayer } from '@/layers/entities/text-layer.entity';
 import {
   CircleLayer,
@@ -225,10 +229,10 @@ export class TemplatesService {
     const baseProperties = {
       type,
       order_index: orderIndex,
-      positionX: dto.position.x,
-      positionY: dto.position.y,
-      width: dto.size?.width,
-      height: dto.size?.height,
+      positionX: dto.positionX,
+      positionY: dto.positionY,
+      width: dto.width,
+      height: dto.height,
       rotation: dto.rotation || 0,
     };
 
@@ -368,4 +372,67 @@ export class TemplatesService {
       await queryRunner.release();
     }
   }
+
+  async update(id: number, updateTemplateDto: UpdateTemplateDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 1. Verificar si la plantilla existe
+      const template = await queryRunner.manager.findOne(Template, {
+        where: { id_template: id },
+      });
+
+      if (!template) {
+        throw new NotFoundException(`Template con ID ${id} no encontrado`);
+      }
+
+      const { title, is_public, canvas, layers } = updateTemplateDto;
+
+      // 2. Actualizar propiedades básicas de la plantilla si vienen en el DTO
+      if (title !== undefined) template.title = title;
+      if (is_public !== undefined) template.is_public = is_public;
+      if (canvas) {
+        if (canvas.width !== undefined) template.canvasWidth = canvas.width;
+        if (canvas.height !== undefined) template.canvasHeight = canvas.height;
+      }
+
+      await queryRunner.manager.save(Template, template);
+
+      // 3. Si se envían capas nuevas, reemplazar las existentes
+      if (layers && layers.length > 0) {
+        // Eliminar capas anteriores vinculadas a esta plantilla
+        await queryRunner.manager.delete(Layers, {
+          template: { id_template: id },
+        });
+
+        // Crear las nuevas entidades de capas
+        const newLayerEntities: Layers[] = layers.map((layerDto, index) => {
+          const layerEntity = this.mapDtoToLayerEntity(layerDto, index);
+          layerEntity.template = template; // Asignar la plantilla padre
+          return layerEntity;
+        });
+
+        // Guardar las nuevas capas
+        await queryRunner.manager.save(Layers, newLayerEntities);
+      }
+
+      await queryRunner.commitTransaction();
+
+      // Retornar la plantilla actualizada completa
+      return this.getTemplateWithResolvedComponents(id);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException(
+        `Error al actualizar la plantilla: ${error.message}`,
+      );
+    } finally {
+      await queryRunner.release();
+    }
+  }
 }
+//IO

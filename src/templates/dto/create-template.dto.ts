@@ -10,6 +10,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { LayerType } from '@/layers/entities/layer.entity';
+import { PartialType } from '@nestjs/mapped-types';
 
 export class CanvasDto {
   @IsNumber()
@@ -44,13 +45,19 @@ export class CreateLayerDto {
   @IsOptional()
   name?: string;
 
-  @ValidateNested()
-  @Type(() => PositionDto)
-  position: PositionDto;
+  @IsNumber()
+  @IsNotEmpty()
+  positionX?: number;
 
-  @ValidateNested()
-  @Type(() => SizeDto)
-  size: SizeDto;
+  @IsNumber()
+  @IsNotEmpty()
+  positionY?: number;
+
+  @IsNumber()
+  width: number;
+
+  @IsNumber()
+  height: number;
 
   @IsNumber()
   @IsOptional()
@@ -117,3 +124,5 @@ export class CreateTemplateDto {
   @Type(() => CreateLayerDto)
   layers: CreateLayerDto[];
 }
+
+export class UpdateTemplateDto extends PartialType(CreateTemplateDto) {}

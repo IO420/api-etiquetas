@@ -6,11 +6,16 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import { TemplatesService } from './templates.service';
-import { CreateTemplateDto } from './dto/create-template.dto';
+import {
+  CreateTemplateDto,
+  UpdateTemplateDto,
+} from './dto/create-template.dto';
 import { ImageService } from '@/image/image.service';
 import { PaginationDto } from '@/image/dto/image.dto';
 
@@ -46,8 +51,8 @@ export class TemplatesController {
           id_template: template.id_template,
           title: template.title,
           createdAt: template.createdAt,
-          height:template.canvasHeight,
-          width:template.canvasWidth,
+          height: template.canvasHeight,
+          width: template.canvasWidth,
           previewUrl: preview.url,
         };
       }),
@@ -70,8 +75,16 @@ export class TemplatesController {
   }
 
   @Delete(':id')
-  async deleteTempleteAndLayers(@Param('id') id:number){
+  async deleteTempleteAndLayers(@Param('id') id: number) {
     return await this.templatesService.deleteTemplateAndLayers(id);
+  }
+
+  @Put(':id')
+  async update(
+    @Param('id') id: number,
+    @Body() updateTemplateDto: UpdateTemplateDto,
+  ) {
+    return await this.templatesService.update(+id, updateTemplateDto);
   }
 }
 //IO
