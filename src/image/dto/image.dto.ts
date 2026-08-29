@@ -82,6 +82,14 @@ export class TextDto {
   @IsOptional()
   @IsIn(['normal', 'bold'])
   fontWeight?: 'normal' | 'bold';
+
+  @IsOptional()
+  @IsNumber()
+  width?: number;
+
+  @IsOptional()
+  @IsNumber()
+  height?: number;
 }
 
 export class ShapeBaseDto {
@@ -112,7 +120,7 @@ export class ShapeBaseDto {
 
   @IsOptional()
   @IsString()
-  dashPattern?:string
+  dashPattern?: string;
 }
 
 export class WaveShapeDto extends ShapeBaseDto {

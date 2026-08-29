@@ -146,6 +146,8 @@ export class TemplatesService {
           fontSize: textLayer.fontSize,
           fontWeight: textLayer.fontWeight as any,
           rotation: textLayer.rotation,
+          width: textLayer.width,
+          height: textLayer.height,
           ...basePosition,
         };
       }
@@ -361,9 +363,7 @@ export class TemplatesService {
       await queryRunner.rollbackTransaction();
 
       if (error instanceof NotFoundException) throw error;
-      throw new InternalServerErrorException(
-        'Error to delete the template',
-      );
+      throw new InternalServerErrorException('Error to delete the template');
     } finally {
       await queryRunner.release();
     }

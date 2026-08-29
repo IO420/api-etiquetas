@@ -30,42 +30,46 @@ export function drawText(
   assetsPath: string,
   registeredFonts: Set<string>,
 ) {
-
   if (!label.text || label.text.trim() === '') {
     return;
   }
 
   const fontFamily = label.textFont || 'Open Sans';
-
   getFont(fontFamily, assetsPath, registeredFonts);
 
-  const fontSize = label.fontSize || 80;
+  const fontSize = label.fontSize || 32;
+  const width = label.width || 0;
+  const height = label.height || 0;
 
   ctx.save();
-  ctx.translate(label.positionX, label.positionY);
 
-  // degrees to radians
+  const centerX = label.positionX + width / 2;
+  const centerY = label.positionY + height / 2;
+
+  ctx.translate(centerX, centerY);
+
   const rotation = ((label.rotation ?? 0) * Math.PI) / 180;
   ctx.rotate(rotation);
 
   const fontWeight = label.fontWeight ?? 'normal';
 
   ctx.font = `${fontWeight} ${fontSize}px "${fontFamily}"`;
+
   ctx.textAlign = label.textAlign || 'center';
   ctx.textBaseline = 'middle';
 
   // create border
   if (label.strokeWidth) {
     ctx.strokeStyle = label.strokeColor || '#FFFFFF';
-    ctx.lineWidth = Math.max(12, fontSize * 0.15);
+    ctx.lineWidth = label.strokeWidth || Math.max(2, fontSize * 0.1);
     ctx.lineJoin = 'round';
 
-    ctx.strokeText(label.text, 0, 0);
+    ctx.strokeText(label.text, 0, 0, width > 0 ? width : undefined);
   }
 
-  //color text
-  ctx.fillStyle = label.color || 'black';
-  ctx.fillText(label.text, 0, 0);
+  ctx.fillStyle = label.color || '#000000';
+
+  ctx.fillText(label.text, 0, 0, width > 0 ? width : undefined);
 
   ctx.restore();
 }
