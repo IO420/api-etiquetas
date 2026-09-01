@@ -10,14 +10,12 @@ export function getFont(
 ): void {
   if (!textFont) return;
 
-  //if the font ist already in the set, dont save
   if (registeredFonts.has(textFont)) {
     return;
   }
 
   const fontPath = path.join(assetsPath, 'fonts', textFont);
 
-  //save the font
   if (fs.existsSync(fontPath)) {
     GlobalFonts.registerFromPath(fontPath, textFont);
     registeredFonts.add(textFont);
@@ -30,11 +28,13 @@ export function drawText(
   assetsPath: string,
   registeredFonts: Set<string>,
 ) {
+
   if (!label.text || label.text.trim() === '') {
     return;
   }
 
   const fontFamily = label.textFont || 'Open Sans';
+
   getFont(fontFamily, assetsPath, registeredFonts);
 
   const fontSize = label.fontSize || 32;
@@ -58,18 +58,23 @@ export function drawText(
   ctx.textAlign = label.textAlign || 'center';
   ctx.textBaseline = 'middle';
 
-  // create border
-  if (label.strokeWidth) {
-    ctx.strokeStyle = label.strokeColor || '#FFFFFF';
-    ctx.lineWidth = label.strokeWidth || Math.max(2, fontSize * 0.1);
-    ctx.lineJoin = 'round';
+  const maxWidth = width > 0 ? width : undefined;
 
-    ctx.strokeText(label.text, 0, 0, width > 0 ? width : undefined);
+  const strokeWidth = Number(label.strokeWidth);
+
+  if (strokeWidth > 0) {
+    ctx.strokeStyle = label.strokeColor || '#FFFFFF';
+    ctx.lineWidth = strokeWidth;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+
+    ctx.strokeText(label.text, 0, 0, maxWidth);
   }
 
   ctx.fillStyle = label.color || '#000000';
 
-  ctx.fillText(label.text, 0, 0, width > 0 ? width : undefined);
+  ctx.fillText(label.text, 0, 0, maxWidth);
 
   ctx.restore();
 }
+//IO

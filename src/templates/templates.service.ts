@@ -125,6 +125,7 @@ export class TemplatesService {
     const basePosition = {
       positionX: layer.positionX,
       positionY: layer.positionY,
+      rotation: layer.rotation,
     };
 
     switch (layer.type) {
@@ -151,9 +152,10 @@ export class TemplatesService {
           color: textLayer.color,
           fontSize: textLayer.fontSize,
           fontWeight: textLayer.fontWeight as any,
-          rotation: textLayer.rotation,
           width: textLayer.width,
           height: textLayer.height,
+          strokeColor: textLayer.strokeColor,
+          strokeWidth: textLayer.strokeWidth,
           ...basePosition,
         };
       }
@@ -235,7 +237,11 @@ export class TemplatesService {
       positionY: dto.positionY,
       width: dto.width,
       height: dto.height,
-      rotation: dto.rotation || 0,
+      rotation: dto.rotation,
+      strokeColor: dto.strokeColor,
+      strokeWidth: dto.strokeWidth,
+      borderRadius:dto.borderRadius,
+      dashPattern:dto.dashPattern,
     };
 
     switch (type) {
@@ -254,22 +260,18 @@ export class TemplatesService {
         return this.layersRepository.manager.create(RectangleLayer, {
           ...baseProperties,
           fillColor: dto.fillColor,
-          strokeColor: dto.strokeColor,
         });
 
       case LayerType.WAVE:
         return this.layersRepository.manager.create(WaveLayer, {
           ...baseProperties,
           fillColor: dto.fillColor,
-          strokeColor: dto.strokeColor,
-          strokeWidth: dto.strokeWidth,
         });
 
       case LayerType.CIRCLE:
         return this.layersRepository.manager.create(CircleLayer, {
           ...baseProperties,
           fillColor: dto.fillColor,
-          strokeColor: dto.strokeColor,
         });
 
       case LayerType.TEMPLATE:
@@ -285,6 +287,8 @@ export class TemplatesService {
         return this.layersRepository.manager.create(ImageLayer, {
           ...baseProperties,
           imageUrl: dto.name,
+          flipX: dto.flipX,
+          flipY: dto.flipY,
         });
     }
   }

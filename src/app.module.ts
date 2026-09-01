@@ -39,7 +39,7 @@ import { FontsModule } from './fonts/fonts.module';
           username: configService.get<string>('api_db_username'),
           password: configService.get<string>('api_db_password'),
           database: configService.get<string>('api_db_database'),
-          synchronize: true,
+          synchronize: false,
           dropSchema: false,
           autoLoadEntities: true,
           timezone: '+00:00',

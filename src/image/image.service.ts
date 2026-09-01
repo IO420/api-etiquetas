@@ -158,15 +158,14 @@ export class ImageService {
   async generateCustomLabelPdf(dto: GenerateTagDto): Promise<Buffer> {
     const imageBuffer = await this.generateCustomLabel(dto, 4);
 
-    const widthInPoints = 20 * 28.3465; // ~566.93 puntos
-    const heightInPoints = 26.5 * 28.3465; // ~751.18 puntos
+    const LETTER_WIDTH = 612;
+    const LETTER_HEIGHT = 792;
 
     return new Promise((resolve, reject) => {
       const chunks: Buffer[] = [];
 
-      //create the document without margin
       const doc = new PDFDocument({
-        size: [widthInPoints, heightInPoints],
+        size: 'LETTER',
         margins: { top: 0, bottom: 0, left: 0, right: 0 },
       });
 
@@ -174,7 +173,11 @@ export class ImageService {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', (err) => reject(err));
 
-      doc.image(imageBuffer, 0, 0);
+      doc.image(imageBuffer, 0, 0, {
+        fit: [LETTER_WIDTH, LETTER_HEIGHT],
+        align: 'center',
+        valign: 'center',
+      });
 
       doc.end();
     });
@@ -326,12 +329,12 @@ export class ImageService {
     } = PAGE_DIMENSIONS[selectedSize];
 
     const MARGIN_LEFT = 10;
-    const MARGIN_TOP = PageSize.A4 ?25:10;
+    const MARGIN_TOP = PageSize.A4 ? 25 : 10;
 
     const LABEL_WIDTH = 190;
     const LABEL_HEIGHT = (dto.canvasHeight / dto.canvasWidth) * LABEL_WIDTH;
 
-    const GAP_X = PageSize.A4 ?2:8;
+    const GAP_X = PageSize.A4 ? 2 : 8;
     const GAP_Y = 5;
 
     const COLS = Math.floor(

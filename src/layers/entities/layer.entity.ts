@@ -44,6 +44,12 @@ export abstract class Layers {
   @Column({ type: 'float', default: 0 })
   rotation: number;
 
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  strokeColor: string;
+
+  @Column({ type: 'varchar', length: 2 })
+  strokeWidth: string;
+
   @ManyToOne(() => Template, (template) => template.layers, {
     onDelete: 'CASCADE',
   })

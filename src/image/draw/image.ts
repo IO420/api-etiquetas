@@ -21,7 +21,6 @@ export async function drawImage(
   label: ImageDto,
   assetsPath: string,
 ) {
-  console.log(label)
   const imagePath = getImage(label.imageUrl, assetsPath);
   const img = await loadImage(imagePath);
 

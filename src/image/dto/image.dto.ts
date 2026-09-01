@@ -81,8 +81,8 @@ export class TextDto {
   fontSize?: number;
 
   @IsOptional()
-  @IsNumber()
-  strokeWidth?: number;
+  @IsString()
+  strokeWidth?: string;
 
   @IsOptional()
   @IsString()

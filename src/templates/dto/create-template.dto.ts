@@ -109,6 +109,14 @@ export class CreateLayerDto {
   @IsOptional()
   strokeWidth: string;
 
+  @IsNumber()
+  @IsOptional()
+  borderRadius:number
+
+  @IsString()
+  @IsOptional()
+  dashPattern:string
+
   // template props
   @IsNumber()
   @IsOptional()

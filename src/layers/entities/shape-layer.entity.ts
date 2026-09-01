@@ -6,12 +6,6 @@ export abstract class ShapeLayer extends Layers {
   @Column({ type: 'varchar', length: 50, nullable: true })
   fillColor: string;
 
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  strokeColor: string;
-
-  @Column({ type: 'varchar', length: 2 })
-  strokeWidth: string;
-
   @Column({ type: 'float', default: 0 })
   borderRadius: number;
 
