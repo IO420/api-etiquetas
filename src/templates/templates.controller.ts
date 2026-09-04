@@ -86,5 +86,10 @@ export class TemplatesController {
   ) {
     return await this.templatesService.update(+id, updateTemplateDto);
   }
+
+  @Post(':id/clone')
+  async clone(@Param('id') id: string) {
+    return await this.templatesService.clone(+id);
+  }
 }
 //IO

@@ -240,8 +240,8 @@ export class TemplatesService {
       rotation: dto.rotation,
       strokeColor: dto.strokeColor,
       strokeWidth: dto.strokeWidth,
-      borderRadius:dto.borderRadius,
-      dashPattern:dto.dashPattern,
+      borderRadius: dto.borderRadius,
+      dashPattern: dto.dashPattern,
     };
 
     switch (type) {
@@ -436,6 +436,50 @@ export class TemplatesService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async clone(id_template: number, userId?: number) {
+    const original = await this.getTemplateWithResolvedComponents(id_template);
+
+    const layersDto: CreateLayerDto[] = original.layers.map((layer: any) => {
+      return {
+        type: layer.type,
+        positionX: layer.positionX,
+        positionY: layer.positionY,
+        width: layer.width,
+        height: layer.height,
+        rotation: layer.rotation || 0,
+        text: layer.text,
+        label: layer.label,
+        fontSize: layer.fontSize,
+        textFont: layer.textFont,
+        color: layer.color,
+        textAlign: layer.textAlign,
+        fillColor: layer.fillColor,
+        strokeColor: layer.strokeColor,
+        strokeWidth: layer.strokeWidth,
+        borderRadius: layer.borderRadius,
+        dashPattern: Array.isArray(layer.dash)
+          ? layer.dash.join(',')
+          : layer.dashPattern,
+        name: layer.imageUrl || layer.name,
+        flipX: layer.flipX,
+        flipY: layer.flipY,
+        childTemplateId: layer.childTemplate?.id_template,
+      };
+    });
+
+    const createDto: CreateTemplateDto = {
+      title: `${original.title} (Copia)`,
+      is_public: original.is_public ?? false,
+      canvas: {
+        width: original.canvasWidth,
+        height: original.canvasHeight,
+      },
+      layers: layersDto,
+    };
+
+    return await this.create(createDto, userId);
   }
 }
 //IO
