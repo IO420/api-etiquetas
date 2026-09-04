@@ -28,7 +28,6 @@ export function drawText(
   assetsPath: string,
   registeredFonts: Set<string>,
 ) {
-
   if (!label.text || label.text.trim() === '') {
     return;
   }
@@ -56,11 +55,27 @@ export function drawText(
   ctx.font = `${fontWeight} ${fontSize}px "${fontFamily}"`;
 
   ctx.textAlign = label.textAlign || 'center';
-  ctx.textBaseline = 'middle';
+
+  // Usamos alphabetic porque vamos a calcular manualmente
+  // la posición vertical real del texto.
+  ctx.textBaseline = 'alphabetic';
 
   const maxWidth = width > 0 ? width : undefined;
 
-  const strokeWidth = Number(label.strokeWidth);
+  // Obtener las métricas reales de la fuente
+  const metrics = ctx.measureText(label.text);
+
+  const ascent = metrics.actualBoundingBoxAscent || fontSize * 0.8;
+  const descent = metrics.actualBoundingBoxDescent || fontSize * 0.2;
+
+  // Centro real del área visible de los caracteres.
+  const textHeight = ascent + descent;
+
+  // Calculamos el baseline necesario para que el texto visible
+  // quede centrado exactamente en Y = 0.
+  const textY = (ascent - descent) / 2;
+
+  const strokeWidth = Number(label.strokeWidth || 0);
 
   if (strokeWidth > 0) {
     ctx.strokeStyle = label.strokeColor || '#FFFFFF';
@@ -68,13 +83,12 @@ export function drawText(
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
 
-    ctx.strokeText(label.text, 0, 0, maxWidth);
+    ctx.strokeText(label.text, 0, textY, maxWidth);
   }
 
   ctx.fillStyle = label.color || '#000000';
 
-  ctx.fillText(label.text, 0, 0, maxWidth);
+  ctx.fillText(label.text, 0, textY, maxWidth);
 
   ctx.restore();
 }
-//IO
